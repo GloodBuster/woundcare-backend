@@ -1,0 +1,11 @@
+services:
+  woundcare-backend:
+    build:
+      context: .
+      args:
+        - APP_PORT=${APP_PORT}
+    ports:
+      - target: ${APP_PORT}
+        published: ${APP_PORT}
+    env_file:
+      - ./.env
