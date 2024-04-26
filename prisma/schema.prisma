@@ -12,3 +12,161 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  ADMIN
+  PATIENT
+  NURSE
+  DOCTOR
+}
+
+enum Genre {
+  MALE
+  FEMALE
+}
+
+enum BloodType {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+}
+
+enum PatientStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum NotificationType {
+  BANDAGE_CHANGE
+}
+
+model User {
+  nationalId    String          @id
+  fullname      String
+  email         String          @unique
+  password      String
+  role          Role
+  nurse         Nurse[]
+  doctor        Doctor[]
+  patient       Patient[]
+  notifications Notifications[]
+  Conversation  Conversation[]
+  Message       Message[]
+}
+
+model Nurse {
+  user          User            @relation(fields: [nationalId], references: [nationalId])
+  nationalId    String          @id
+  genre         Genre
+  birthDate     DateTime        @db.Date
+  medicalCenter String
+  MedicalFile   MedicalFile[]
+  BandageChange BandageChange[]
+  Conversation  Conversation[]
+}
+
+model Doctor {
+  user          User          @relation(fields: [nationalId], references: [nationalId])
+  nationalId    String        @id
+  genre         Genre
+  birthDate     DateTime      @db.Date
+  medicalCenter String
+  MedicalFile   MedicalFile[]
+}
+
+model Patient {
+  user            User            @relation(fields: [nationalId], references: [nationalId])
+  nationalId      String          @id
+  genre           Genre
+  birthDate       DateTime        @db.Date
+  address         String
+  phoneNumber     String
+  cellPhoneNumber String
+  photo           String
+  bloodType       BloodType
+  weight          Float
+  height          Float
+  status          PatientStatus
+  allergies       String[]
+  medicalRecords  String[]
+  MedicalFile     MedicalFile[]
+  BandageChange   BandageChange[]
+}
+
+model MedicalFile {
+  id                Int            @id @default(autoincrement())
+  patientId         String
+  patient           Patient        @relation(fields: [patientId], references: [nationalId])
+  doctorId          String
+  doctor            Doctor         @relation(fields: [doctorId], references: [nationalId])
+  nurseId           String
+  nurse             Nurse          @relation(fields: [nurseId], references: [nationalId])
+  date              DateTime       @db.Date
+  description       String
+  dischargeDate     DateTime?      @db.Date
+  physicalExam      String[]
+  medicalHistory    String[]
+  previousTreatment String[]
+  labResults        String[]
+  carePlan          String[]
+  medicine          Medicine[]
+  Conversation      Conversation[]
+
+  @@unique([patientId, date])
+}
+
+model Medicine {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  MedicalFile MedicalFile[]
+}
+
+model Notifications {
+  id      Int              @id @default(autoincrement())
+  message String
+  date    DateTime         @db.Date
+  user    User             @relation(fields: [userId], references: [nationalId])
+  userId  String
+  type    NotificationType
+  read    Boolean          @default(false)
+}
+
+model BandageChange {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @db.Date
+  nurseId   String
+  nurse     Nurse    @relation(fields: [nurseId], references: [nationalId])
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [nationalId])
+
+  @@unique([patientId, date])
+}
+
+model Conversation {
+  id            Int         @id @default(autoincrement())
+  userId        String
+  user          User        @relation(fields: [userId], references: [nationalId])
+  nurseId       String
+  nurse         Nurse       @relation(fields: [nurseId], references: [nationalId])
+  medicalFileId Int
+  medicalFile   MedicalFile @relation(fields: [medicalFileId], references: [id])
+  messages      Message[]
+
+  @@unique([userId, nurseId, medicalFileId])
+}
+
+model Message {
+  id             Int           @id @default(autoincrement())
+  Conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  conversationId Int?
+  user           User          @relation(fields: [userId], references: [nationalId])
+  userId         String
+  image          String?
+  createdAt      DateTime      @default(now())
+}
