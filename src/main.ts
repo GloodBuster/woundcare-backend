@@ -14,14 +14,14 @@ async function bootstrap() {
       whitelist: true,
     }),
   );
-
-  const config = new DocumentBuilder()
+  
+  const swaggerConfig = new DocumentBuilder()
     .setTitle('WoundCare API')
     .setDescription('API for WoundCare application')
     .setVersion('1.0')
     .addTag('WoundCare')
     .build();
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, document);
 
   await app.listen(process.env.APP_PORT || 3000);
