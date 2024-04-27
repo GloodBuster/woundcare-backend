@@ -43,6 +43,9 @@ enum PatientStatus {
 
 enum NotificationType {
   BANDAGE_CHANGE
+  MEDICATION_TIME
+  MONITORING_SIGNS_AND_SYMPTOMS
+  DISCHARHE
 }
 
 model User {
