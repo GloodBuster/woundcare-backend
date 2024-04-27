@@ -14,12 +14,13 @@ async function bootstrap() {
       whitelist: true,
     }),
   );
-  
+
   const swaggerConfig = new DocumentBuilder()
     .setTitle('WoundCare API')
     .setDescription('API for WoundCare application')
     .setVersion('1.0')
     .addTag('WoundCare')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, document);
