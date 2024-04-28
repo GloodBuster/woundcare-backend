@@ -17,7 +17,6 @@ export class AuthController {
     private readonly jwtService: JwtService,
     private readonly authService: AuthService,
   ) {}
-
   @Post('login')
   async login(@Body() loginDto: LoginDto): Promise<LoginResponseDto> {
     try {
