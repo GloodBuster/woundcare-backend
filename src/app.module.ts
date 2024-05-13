@@ -11,6 +11,7 @@ import { NurseModule } from './nurse/nurse.module';
 import { DoctorModule } from './doctor/doctor.module';
 import { MedicalFileModule } from './medical-file/medical-file.module';
 import { MedicineModule } from './medicine/medicine.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { MedicineModule } from './medicine/medicine.module';
     DoctorModule,
     MedicalFileModule,
     MedicineModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

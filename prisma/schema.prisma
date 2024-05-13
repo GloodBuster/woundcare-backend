@@ -134,7 +134,7 @@ model Medicine {
 model Notifications {
   id      Int              @id @default(autoincrement())
   message String
-  date    DateTime         @db.Date
+  date    DateTime         @default(now())
   user    User             @relation(fields: [userId], references: [nationalId])
   userId  String
   type    NotificationType
