@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { AllergiesModule } from './allergies/allergies.module';
 import { MedicalHistoryModule } from './medical-history/medical-history.module';
 import { PatientModule } from './patient/patient.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PatientModule } from './patient/patient.module';
     PatientModule,
     AllergiesModule,
     MedicalHistoryModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
