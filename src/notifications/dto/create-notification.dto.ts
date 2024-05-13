@@ -14,7 +14,7 @@ export class CreateNotificationDto {
   @IsNotEmpty()
   @IsEnum(NotificationType)
   @ApiProperty({
-    example: `${NotificationType.BANDAGE_CHANGE} | ${NotificationType.DISCHARHE} | ${NotificationType.MEDICATION_TIME} | ${NotificationType.MONITORING_SIGNS_AND_SYMPTOMS}`,
+    example: `${NotificationType.BANDAGE_CHANGE} | ${NotificationType.DISCHARGE} | ${NotificationType.MEDICATION_TIME} | ${NotificationType.MONITORING_SIGNS_AND_SYMPTOMS}`,
   })
   type: NotificationType;
 }
