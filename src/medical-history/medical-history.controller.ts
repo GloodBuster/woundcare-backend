@@ -16,15 +16,18 @@ import { CreateMedicalHistoryDto } from './dto/create-medical-history.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from '@prisma/client';
 
 @Controller('patient/medical-file/:id/medical-history')
+@UseGuards(AuthGuard)
 @ApiTags('medical-history')
 export class MedicalHistoryController {
   constructor(private readonly medicalHistoryService: MedicalHistoryService) {}
 
   @Post()
+  @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async create(
     @Param('id', ParseIntPipe) id: number,
@@ -46,8 +49,8 @@ export class MedicalHistoryController {
   }
 
   @Delete(':description')
+  @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async remove(
     @Param('id', ParseIntPipe) id: number,

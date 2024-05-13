@@ -16,15 +16,19 @@ import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from '@prisma/client';
 
 @Controller('patient')
 @ApiTags('patient')
+@UseGuards(AuthGuard, RolesGuard)
 export class PatientController {
   constructor(private readonly patientService: PatientService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(AuthGuard)
+  @Roles(Role.ADMIN, Role.NURSE)
   @ApiBearerAuth()
   async create(@Body() createPatientDto: CreatePatientDto) {
     try {
@@ -36,12 +40,14 @@ export class PatientController {
   }
 
   @Get()
+  @Roles(Role.ADMIN, Role.NURSE, Role.DOCTOR)
   @HttpCode(HttpStatus.OK)
   async findAll() {
     return await this.patientService.findAll();
   }
 
   @Get(':id')
+  @Roles(Role.ADMIN, Role.NURSE, Role.DOCTOR)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return await this.patientService.findOne(id);
@@ -49,7 +55,7 @@ export class PatientController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(AuthGuard)
+  @Roles(Role.ADMIN, Role.NURSE)
   @ApiBearerAuth()
   async update(
     @Param('id') id: string,
@@ -64,7 +70,7 @@ export class PatientController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard)
+  @Roles(Role.ADMIN, Role.NURSE)
   @ApiBearerAuth()
   async remove(@Param('id') id: string) {
     return await this.patientService.remove(id);

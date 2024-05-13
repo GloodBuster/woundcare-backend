@@ -15,15 +15,19 @@ import { CreateAllergyDto } from './dto/create-allergy.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from '@prisma/client';
 
 @Controller('patient/:nationalId/allergies')
+@UseGuards(AuthGuard, RolesGuard)
 @ApiTags('allergies')
 export class AllergiesController {
   constructor(private readonly allergiesService: AllergiesService) {}
 
   @Post()
+  @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async create(
     @Param('nationaId') nationalId: string,
@@ -42,8 +46,8 @@ export class AllergiesController {
   }
 
   @Delete(':name')
+  @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async remove(
     @Param('name') name: string,

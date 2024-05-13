@@ -12,15 +12,19 @@ import { CreateAdminDto } from './dto/create-admin.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserDto } from './dto/users.dto';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from '@prisma/client';
 
 @Controller('users')
 @ApiTags('users')
+@UseGuards(AuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post('admin')
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(AuthGuard)
+  @Roles(Role.ADMIN)
   @ApiBearerAuth()
   async createAdminUser(
     @Body() createAdminDto: CreateAdminDto,
