@@ -45,7 +45,8 @@ enum NotificationType {
   BANDAGE_CHANGE
   MEDICATION_TIME
   MONITORING_SIGNS_AND_SYMPTOMS
-  DISCHARHE
+  DISCHARGE
+  POST_BANDAGE_CHANGE
 }
 
 model User {
@@ -117,17 +118,17 @@ model MedicalFile {
   previousTreatment String[]
   labResults        String[]
   carePlan          String[]
-  medicine          Medicine[]
   Conversation      Conversation[]
+  Prescription      Prescription[]
 
   @@unique([patientId, date])
 }
 
 model Medicine {
-  id          Int           @id @default(autoincrement())
-  name        String
-  description String
-  MedicalFile MedicalFile[]
+  id           Int            @id @default(autoincrement())
+  name         String         @unique
+  description  String
+  Prescription Prescription[]
 }
 
 model Notifications {
@@ -172,4 +173,15 @@ model Message {
   userId         String
   image          String?
   createdAt      DateTime      @default(now())
+}
+
+model Prescription {
+  id            Int         @id @default(autoincrement())
+  MedicalFile   MedicalFile @relation(fields: [medicalFileId], references: [id])
+  medicalFileId Int
+  Medicine      Medicine    @relation(fields: [medicineId], references: [id])
+  medicineId    Int
+  dose          Int
+
+  @@unique(name: "medical_file_medicine_unique", fields: [medicalFileId, medicineId])
 }
