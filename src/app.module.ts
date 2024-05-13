@@ -7,6 +7,10 @@ import { UsersModule } from './users/users.module';
 import { AllergiesModule } from './allergies/allergies.module';
 import { MedicalHistoryModule } from './medical-history/medical-history.module';
 import { PatientModule } from './patient/patient.module';
+import { NurseModule } from './nurse/nurse.module';
+import { DoctorModule } from './doctor/doctor.module';
+import { MedicalFileModule } from './medical-file/medical-file.module';
+import { MedicineModule } from './medicine/medicine.module';
 
 @Module({
   imports: [
@@ -16,6 +20,10 @@ import { PatientModule } from './patient/patient.module';
     PatientModule,
     AllergiesModule,
     MedicalHistoryModule,
+    NurseModule,
+    DoctorModule,
+    MedicalFileModule,
+    MedicineModule,
   ],
   controllers: [AppController],
   providers: [AppService],
