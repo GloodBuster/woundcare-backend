@@ -17,7 +17,7 @@ export class PatientService {
     });
     if (user) {
       throw new HttpException(
-        'This patient already exists',
+        'This user already exists',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -59,7 +59,15 @@ export class PatientService {
   }
 
   async findAll() {
-    const patients = this.prismaService.patient.findMany();
+    const patients = this.prismaService.patient.findMany({
+      include: {
+        user: {
+          select: {
+            fullname: true,
+          },
+        },
+      },
+    });
     return patients;
   }
 
@@ -67,6 +75,13 @@ export class PatientService {
     const patient = this.prismaService.patient.findUnique({
       where: {
         nationalId: id,
+      },
+      include: {
+        user: {
+          select: {
+            fullname: true,
+          },
+        },
       },
     });
     return patient;
