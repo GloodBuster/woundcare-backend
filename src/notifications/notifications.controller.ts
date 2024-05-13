@@ -12,6 +12,7 @@ import {
   NotFoundException,
   UseGuards,
   Request,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -45,12 +46,13 @@ export class NotificationsController {
     }
   }
 
-  @Get()
-  @Roles(Role.DOCTOR, Role.PATIENT, Role.NURSE)
+  @Get('me')
+  @Roles(Role.DOCTOR, Role.PATIENT, Role.NURSE, Role.ADMIN)
   async findUserNotifications(
     @Request() req: RequestWithUser,
-    @Query('page') page: number,
-    @Query('per-page') itemsPerPage: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
+    itemsPerPage: number,
   ): Promise<PaginatedResponse<NotificationDto>> {
     try {
       return await this.notificationsService.findUserNotifications(
