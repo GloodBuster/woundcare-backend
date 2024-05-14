@@ -68,7 +68,7 @@ export class PatientController {
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @Roles(Role.ADMIN, Role.NURSE)
   @ApiBearerAuth()
   async remove(@Param('id') id: string) {

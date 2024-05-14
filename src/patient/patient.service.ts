@@ -27,33 +27,34 @@ export class PatientService {
       Number(process.env.SALT_ROUNDS) || 10,
     );
 
-    const patientUser = this.prismaService.user.create({
-      data: {
-        nationalId: createPatientDto.nationalId,
-        fullname: createPatientDto.fullname,
-        email: createPatientDto.email,
-        password: hashedPassword,
-        role: Role.PATIENT,
-      },
-    });
-
-    const patient = this.prismaService.patient.create({
-      data: {
-        nationalId: (await patientUser).nationalId,
-        genre: createPatientDto.genre,
-        birthDate: new Date(createPatientDto.birthDate).toISOString(),
-        address: createPatientDto.adress,
-        phoneNumber: createPatientDto.phoneNumber,
-        cellPhoneNumber: createPatientDto.cellPhoneNumber,
-        photo: createPatientDto.photo,
-        bloodType: createPatientDto.bloodType,
-        weight: createPatientDto.weight,
-        height: createPatientDto.height,
-        status: createPatientDto.status,
-        allergies: createPatientDto.allergies,
-        medicalRecords: createPatientDto.medicalRecord,
-      },
-    });
+    const [patientUser, patient] = await this.prismaService.$transaction([
+      this.prismaService.user.create({
+        data: {
+          nationalId: createPatientDto.nationalId,
+          fullname: createPatientDto.fullname,
+          email: createPatientDto.email,
+          password: hashedPassword,
+          role: Role.PATIENT,
+        },
+      }),
+      this.prismaService.patient.create({
+        data: {
+          nationalId: createPatientDto.nationalId,
+          genre: createPatientDto.genre,
+          birthDate: new Date(createPatientDto.birthDate).toISOString(),
+          address: createPatientDto.adress,
+          phoneNumber: createPatientDto.phoneNumber,
+          cellPhoneNumber: createPatientDto.cellPhoneNumber,
+          photo: createPatientDto.photo,
+          bloodType: createPatientDto.bloodType,
+          weight: createPatientDto.weight,
+          height: createPatientDto.height,
+          status: createPatientDto.status,
+          allergies: createPatientDto.allergies,
+          medicalRecords: createPatientDto.medicalRecord,
+        },
+      }),
+    ]);
 
     return patient;
   }
@@ -126,17 +127,20 @@ export class PatientService {
     if (!user) {
       throw new HttpException('Patient not found', HttpStatus.NOT_FOUND);
     }
-
-    await this.prismaService.patient.delete({
-      where: {
-        nationalId: id,
-      },
-    });
-
-    return await this.prismaService.user.delete({
-      where: {
-        nationalId: id,
-      },
-    });
+    const [patient, patientUser] = await this.prismaService.$transaction([
+      this.prismaService.patient.delete({
+        where: {
+          nationalId: id,
+        },
+      }),
+      this.prismaService.user.delete({
+        where: {
+          nationalId: id,
+        },
+      })
+    ])
+  
+    return patient;
+    
   }
 }
