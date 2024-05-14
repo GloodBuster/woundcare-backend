@@ -57,34 +57,17 @@ export class PatientController {
     return await this.patientService.findAll();
   }
 
-  @Get(':id')
-  @Roles(Role.ADMIN, Role.NURSE, Role.DOCTOR)
-  @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
-    return await this.patientService.findOne(id);
-  }
-
   @Get('me')
   @HttpCode(HttpStatus.OK)
   async getMe(@Request() req: RequestWithUser) {
     return await this.patientService.findOne(req.user.nationalId);
   }
 
-  @Patch(':id')
-  @HttpCode(HttpStatus.CREATED)
-  @Roles(Role.ADMIN, Role.NURSE)
-  async update(
-    @Param('id') id: string,
-    @Body() updatePatientDto: UpdatePatientDto,
-  ) {
-    try {
-      return await this.patientService.update(id, updatePatientDto);
-    } catch (error) {
-      if (error instanceof NotFoundError)
-        throw new NotFoundException(error.message);
-
-      throw new InternalServerErrorException(error.message);
-    }
+  @Get(':id')
+  @Roles(Role.ADMIN, Role.NURSE, Role.DOCTOR)
+  @HttpCode(HttpStatus.OK)
+  async findOne(@Param('id') id: string) {
+    return await this.patientService.findOne(id);
   }
 
   @Patch('me')
@@ -100,6 +83,23 @@ export class PatientController {
         throw new NotFoundException(error.message);
       }
       throw new InternalServerErrorException(error.message, { cause: error });
+    }
+  }
+  
+  @Patch(':id')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(Role.ADMIN, Role.NURSE)
+  async update(
+    @Param('id') id: string,
+    @Body() updatePatientDto: UpdatePatientDto,
+  ) {
+    try {
+      return await this.patientService.update(id, updatePatientDto);
+    } catch (error) {
+      if (error instanceof NotFoundError)
+        throw new NotFoundException(error.message);
+
+      throw new InternalServerErrorException(error.message);
     }
   }
 
