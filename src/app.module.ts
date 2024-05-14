@@ -13,7 +13,6 @@ import { MedicalFileModule } from './medical-file/medical-file.module';
 import { MedicineModule } from './medicine/medicine.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MedicalRecordsModule } from './medical-records/medical-records.module';
-import { PatientsMedicineModule } from './patients-medicine/patients-medicine.module';
 import { PrescriptionModule } from './prescription/prescription.module';
 
 @Module({
@@ -30,7 +29,6 @@ import { PrescriptionModule } from './prescription/prescription.module';
     MedicineModule,
     NotificationsModule,
     MedicalRecordsModule,
-    PatientsMedicineModule,
     PrescriptionModule,
   ],
   controllers: [AppController],
