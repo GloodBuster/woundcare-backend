@@ -20,13 +20,14 @@ export class MedicalRecordsService {
 
       if (!patient) return patient;
 
+      const { medicalRecords } = patient;
+
       return await this.prismaService.patient.update({
         where: { nationalId },
         data: {
-          medicalRecords: [
-            ...patient.medicalRecords,
-            createMedicalRecordDto.description,
-          ],
+          medicalRecords: {
+            set: [...medicalRecords, createMedicalRecordDto.description],
+          },
         },
       });
     } catch (error) {

@@ -16,10 +16,12 @@ export class AllergiesService {
       return patient;
     }
 
+    const { allergies } = patient;
+
     return await this.prismaService.patient.update({
       where: { nationalId },
       data: {
-        allergies: [...patient.allergies, createAllergyDto.name],
+        allergies: { set: [...allergies, createAllergyDto.name] },
       },
     });
   }
