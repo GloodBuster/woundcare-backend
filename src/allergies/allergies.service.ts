@@ -7,12 +7,21 @@ export class AllergiesService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(nationaId: string, createAllergyDto: CreateAllergyDto) {
+    const patient = await this.prismaService.patient.findUnique({
+      where: { nationalId: nationaId },
+      select: { allergies: true },
+    });
+
+    if (!patient) {
+      return patient;
+    }
+
+    patient.allergies.push(createAllergyDto.name);
+
     return await this.prismaService.patient.update({
       where: { nationalId: nationaId },
       data: {
-        allergies: {
-          push: createAllergyDto.name,
-        },
+        allergies: patient.allergies,
       },
     });
   }

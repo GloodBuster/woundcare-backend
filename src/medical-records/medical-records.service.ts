@@ -11,14 +11,21 @@ export class MedicalRecordsService {
   async create(
     nationaId: string,
     createMedicalRecordDto: CreateMedicalRecordDto,
-  ): Promise<Patient> {
+  ): Promise<Patient | null> {
     try {
+      const patient = await this.prismaService.patient.findUnique({
+        where: { nationalId: nationaId },
+        select: { medicalRecords: true },
+      });
+
+      if (!patient) return patient;
+
+      patient.medicalRecords.push(createMedicalRecordDto.description);
+
       return await this.prismaService.patient.update({
         where: { nationalId: nationaId },
         data: {
-          medicalRecords: {
-            push: createMedicalRecordDto.description,
-          },
+          medicalRecords: patient.medicalRecords,
         },
       });
     } catch (error) {
