@@ -13,6 +13,8 @@ import {
   UseGuards,
   Request,
   DefaultValuePipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -26,6 +28,7 @@ import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from '@prisma/client';
 import { RequestWithUser } from 'src/common/interfaces/request.interface';
+import { UpdateReadNotificationDto } from './dto/update-read-notification.dto';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -36,6 +39,7 @@ export class NotificationsController {
 
   @Post()
   @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() createNotificationDto: CreateNotificationDto,
   ): Promise<NotificationDto> {
@@ -48,6 +52,7 @@ export class NotificationsController {
 
   @Get('me')
   @Roles(Role.DOCTOR, Role.PATIENT, Role.NURSE, Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
   async findUserNotifications(
     @Request() req: RequestWithUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -65,8 +70,9 @@ export class NotificationsController {
     }
   }
 
-  @Get()
+  @Get(':id')
   @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const notification = await this.notificationsService.findOne(id);
     if (!notification) {
@@ -75,8 +81,47 @@ export class NotificationsController {
     return notification;
   }
 
-  @Patch()
+  @Patch('me')
+  @Roles(Role.DOCTOR, Role.PATIENT, Role.NURSE, Role.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateManyNotificationsStatus(
+    @Request() req: RequestWithUser,
+    @Body() updateReadNotificationDto: UpdateReadNotificationDto,
+  ) {
+    try {
+      return await this.notificationsService.updateManyReadStatus(
+        req.user.nationalId,
+        updateReadNotificationDto,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Patch(':id/me')
+  @Roles(Role.DOCTOR, Role.PATIENT, Role.NURSE, Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async updateNotificationStatus(
+    @Request() req: RequestWithUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateReadNotificationDto: UpdateReadNotificationDto,
+  ) {
+    try {
+      return await this.notificationsService.updateReadStatus(
+        req.user.nationalId,
+        id,
+        updateReadNotificationDto,
+      );
+    } catch (error) {
+      if (error instanceof NotFoundError)
+        throw new NotFoundException(error.message);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Patch(':id')
   @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateNotificationDto: UpdateNotificationDto,
@@ -90,8 +135,9 @@ export class NotificationsController {
     }
   }
 
-  @Delete()
+  @Delete(':id')
   @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
   async remove(@Param('id', ParseIntPipe) id: number) {
     try {
       return await this.notificationsService.remove(id);

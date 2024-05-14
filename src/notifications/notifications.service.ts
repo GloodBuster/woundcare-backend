@@ -9,6 +9,7 @@ import {
   UnexpectedError,
 } from 'src/common/errors/service.error';
 import { Prisma } from '@prisma/client';
+import { UpdateReadNotificationDto } from './dto/update-read-notification.dto';
 
 @Injectable()
 export class NotificationsService {
@@ -65,6 +66,47 @@ export class NotificationsService {
         },
       };
     } catch (error) {
+      throw new UnexpectedError('An unexpected situation ocurred', {
+        cause: error,
+      });
+    }
+  }
+
+  async updateManyReadStatus(
+    nationalId: string,
+    updateReadNotificationDto: UpdateReadNotificationDto,
+  ): Promise<void> {
+    try {
+      await this.prismaService.notifications.updateMany({
+        where: { userId: nationalId },
+        data: { read: updateReadNotificationDto.read },
+      });
+    } catch (error) {
+      throw new UnexpectedError('An unexpected situation ocurred', {
+        cause: error,
+      });
+    }
+  }
+
+  async updateReadStatus(
+    nationalId: string,
+    id: number,
+    updateReadNotificationDto: UpdateReadNotificationDto,
+  ): Promise<NotificationDto> {
+    try {
+      return await this.prismaService.notifications.update({
+        where: { id, userId: nationalId },
+        data: { read: updateReadNotificationDto.read },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundError(
+            `There is no notification with the id (${id}) for the user (${nationalId})`,
+            { cause: error },
+          );
+        }
+      }
       throw new UnexpectedError('An unexpected situation ocurred', {
         cause: error,
       });
