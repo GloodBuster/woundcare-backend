@@ -41,7 +41,7 @@ export class PatientService {
       data: {
         nationalId: (await patientUser).nationalId,
         genre: createPatientDto.genre,
-        birthDate: createPatientDto.birthDate,
+        birthDate: new Date(createPatientDto.birthDate).toISOString(),
         address: createPatientDto.adress,
         phoneNumber: createPatientDto.phoneNumber,
         cellPhoneNumber: createPatientDto.cellPhoneNumber,
