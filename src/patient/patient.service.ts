@@ -1,62 +1,68 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { Role } from '@prisma/client';
+import {
+  AlreadyExistsError,
+  NotFoundError,
+  UnexpectedError,
+} from 'src/common/errors/service.error';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class PatientService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(createPatientDto: CreatePatientDto) {
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        nationalId: createPatientDto.nationalId,
-      },
-    });
-    if (user) {
-      throw new HttpException(
-        'This user already exists',
-        HttpStatus.BAD_REQUEST,
+    try {
+      const hashedPassword = await bcrypt.hash(
+        createPatientDto.password,
+        Number(process.env.SALT_ROUNDS) || 10,
       );
+
+      const [patientUser, patient] = await this.prismaService.$transaction([
+        this.prismaService.user.create({
+          data: {
+            nationalId: createPatientDto.nationalId,
+            fullname: createPatientDto.fullname,
+            email: createPatientDto.email,
+            password: hashedPassword,
+            role: Role.PATIENT,
+          },
+        }),
+        this.prismaService.patient.create({
+          data: {
+            nationalId: createPatientDto.nationalId,
+            genre: createPatientDto.genre,
+            birthDate: new Date(createPatientDto.birthDate).toISOString(),
+            address: createPatientDto.adress,
+            phoneNumber: createPatientDto.phoneNumber,
+            cellPhoneNumber: createPatientDto.cellPhoneNumber,
+            photo: createPatientDto.photo,
+            bloodType: createPatientDto.bloodType,
+            weight: createPatientDto.weight,
+            height: createPatientDto.height,
+            status: createPatientDto.status,
+            allergies: createPatientDto.allergies,
+            medicalRecords: createPatientDto.medicalRecord,
+          },
+        }),
+      ]);
+
+      return patient;
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new AlreadyExistsError(
+            `a patient with the id ${createPatientDto.nationalId} already exists`,
+            { cause: error },
+          );
+        }
+      }
+      throw new UnexpectedError(error.message, { cause: error });
     }
-
-    const hashedPassword = await bcrypt.hash(
-      createPatientDto.password,
-      Number(process.env.SALT_ROUNDS) || 10,
-    );
-
-    const [patientUser, patient] = await this.prismaService.$transaction([
-      this.prismaService.user.create({
-        data: {
-          nationalId: createPatientDto.nationalId,
-          fullname: createPatientDto.fullname,
-          email: createPatientDto.email,
-          password: hashedPassword,
-          role: Role.PATIENT,
-        },
-      }),
-      this.prismaService.patient.create({
-        data: {
-          nationalId: createPatientDto.nationalId,
-          genre: createPatientDto.genre,
-          birthDate: new Date(createPatientDto.birthDate).toISOString(),
-          address: createPatientDto.adress,
-          phoneNumber: createPatientDto.phoneNumber,
-          cellPhoneNumber: createPatientDto.cellPhoneNumber,
-          photo: createPatientDto.photo,
-          bloodType: createPatientDto.bloodType,
-          weight: createPatientDto.weight,
-          height: createPatientDto.height,
-          status: createPatientDto.status,
-          allergies: createPatientDto.allergies,
-          medicalRecords: createPatientDto.medicalRecord,
-        },
-      }),
-    ]);
-
-    return patient;
   }
 
   async findAll() {
@@ -89,58 +95,64 @@ export class PatientService {
   }
 
   async update(id: string, updatePatientDto: UpdatePatientDto) {
-    const user = await this.prismaService.patient.findUnique({
-      where: {
-        nationalId: id,
-      },
-    });
-
-    if (!user) {
-      throw new HttpException('Patient not found', HttpStatus.NOT_FOUND);
+    try {
+      return await this.prismaService.patient.update({
+        where: {
+          nationalId: id,
+        },
+        data: {
+          address: updatePatientDto.adress,
+          phoneNumber: updatePatientDto.phoneNumber,
+          cellPhoneNumber: updatePatientDto.cellPhoneNumber,
+          photo: updatePatientDto.photo,
+          bloodType: updatePatientDto.bloodType,
+          weight: updatePatientDto.weight,
+          height: updatePatientDto.height,
+          allergies: updatePatientDto.allergies,
+          medicalRecords: updatePatientDto.medicalRecord,
+        },
+      });
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundError(`there is no patient with the id ${id}`, {
+            cause: error,
+          });
+        }
+      }
+      throw new UnexpectedError('an unexpected situation has ocurred', {
+        cause: error,
+      });
     }
-
-    return await this.prismaService.patient.update({
-      where: {
-        nationalId: id,
-      },
-      data: {
-        address: updatePatientDto.adress,
-        phoneNumber: updatePatientDto.phoneNumber,
-        cellPhoneNumber: updatePatientDto.cellPhoneNumber,
-        photo: updatePatientDto.photo,
-        bloodType: updatePatientDto.bloodType,
-        weight: updatePatientDto.weight,
-        height: updatePatientDto.height,
-        allergies: updatePatientDto.allergies,
-        medicalRecords: updatePatientDto.medicalRecord,
-      },
-    });
   }
 
   async remove(id: string) {
-    const user = await this.prismaService.patient.findUnique({
-      where: {
-        nationalId: id,
-      },
-    });
+    try {
+      const [patient, patientUser] = await this.prismaService.$transaction([
+        this.prismaService.patient.delete({
+          where: {
+            nationalId: id,
+          },
+        }),
+        this.prismaService.user.delete({
+          where: {
+            nationalId: id,
+          },
+        }),
+      ]);
 
-    if (!user) {
-      throw new HttpException('Patient not found', HttpStatus.NOT_FOUND);
+      return patient;
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundError(`there is no doctor with the id ${id}`, {
+            cause: error,
+          });
+        }
+      }
+      throw new UnexpectedError('an unexpected situation has ocurred', {
+        cause: error,
+      });
     }
-    const [patient, patientUser] = await this.prismaService.$transaction([
-      this.prismaService.patient.delete({
-        where: {
-          nationalId: id,
-        },
-      }),
-      this.prismaService.user.delete({
-        where: {
-          nationalId: id,
-        },
-      })
-    ])
-  
-    return patient;
-    
   }
 }

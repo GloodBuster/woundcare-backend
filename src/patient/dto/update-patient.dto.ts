@@ -1,33 +1,42 @@
 import { PartialType } from '@nestjs/swagger';
 import { CreatePatientDto } from './create-patient.dto';
 import { BloodType } from '@prisma/client';
-import { IsArray, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdatePatientDto extends PartialType(CreatePatientDto) {
   @IsString()
-  adress?: string;
+  @IsOptional()
+  adress: string;
 
   @IsString()
-  phoneNumber?: string;
+  @IsOptional()
+  phoneNumber: string;
 
   @IsString()
-  cellPhoneNumber?: string;
+  @IsOptional()
+  cellPhoneNumber: string;
 
   @IsString()
-  photo?: string;
+  @IsOptional()
+  photo: string;
 
   @IsString()
-  bloodType?: BloodType;
+  @IsOptional()
+  bloodType: BloodType;
 
   @IsNumber()
-  weight?: number;
+  @IsOptional()
+  weight: number;
 
   @IsNumber()
-  height?: number;
+  @IsOptional()
+  height: number;
 
   @IsArray()
-  allergies?: string[];
+  @IsOptional()
+  allergies: string[];
 
   @IsArray()
-  medicalRecord?: string[];
+  @IsOptional()
+  medicalRecord: string[];
 }
