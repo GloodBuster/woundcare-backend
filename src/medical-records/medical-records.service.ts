@@ -9,23 +9,24 @@ export class MedicalRecordsService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(
-    nationaId: string,
+    nationalId: string,
     createMedicalRecordDto: CreateMedicalRecordDto,
   ): Promise<Patient | null> {
     try {
       const patient = await this.prismaService.patient.findUnique({
-        where: { nationalId: nationaId },
+        where: { nationalId },
         select: { medicalRecords: true },
       });
 
       if (!patient) return patient;
 
-      patient.medicalRecords.push(createMedicalRecordDto.description);
-
       return await this.prismaService.patient.update({
-        where: { nationalId: nationaId },
+        where: { nationalId },
         data: {
-          medicalRecords: patient.medicalRecords,
+          medicalRecords: [
+            ...patient.medicalRecords,
+            createMedicalRecordDto.description,
+          ],
         },
       });
     } catch (error) {
@@ -36,12 +37,12 @@ export class MedicalRecordsService {
   }
 
   async remove(
-    nationaId: string,
+    nationalId: string,
     description: string,
   ): Promise<Patient | null> {
     try {
       const patient = await this.prismaService.patient.findUnique({
-        where: { nationalId: nationaId },
+        where: { nationalId },
         select: { medicalRecords: true },
       });
 
@@ -52,7 +53,7 @@ export class MedicalRecordsService {
       const { medicalRecords } = patient;
 
       return await this.prismaService.patient.update({
-        where: { nationalId: nationaId },
+        where: { nationalId },
         data: {
           medicalRecords: {
             set: medicalRecords.filter(

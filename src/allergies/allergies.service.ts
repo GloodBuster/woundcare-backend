@@ -6,9 +6,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class AllergiesService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(nationaId: string, createAllergyDto: CreateAllergyDto) {
+  async create(nationalId: string, createAllergyDto: CreateAllergyDto) {
     const patient = await this.prismaService.patient.findUnique({
-      where: { nationalId: nationaId },
+      where: { nationalId },
       select: { allergies: true },
     });
 
@@ -16,12 +16,10 @@ export class AllergiesService {
       return patient;
     }
 
-    patient.allergies.push(createAllergyDto.name);
-
     return await this.prismaService.patient.update({
-      where: { nationalId: nationaId },
+      where: { nationalId },
       data: {
-        allergies: patient.allergies,
+        allergies: [...patient.allergies, createAllergyDto.name],
       },
     });
   }
