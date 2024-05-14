@@ -26,6 +26,7 @@ import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from '@prisma/client';
 import { RequestWithUser } from 'src/common/interfaces/request.interface';
+import { UpdateReadNotificationDto } from './dto/update-read-notification.dto';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -65,7 +66,7 @@ export class NotificationsController {
     }
   }
 
-  @Get()
+  @Get(':id')
   @Roles(Role.ADMIN)
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const notification = await this.notificationsService.findOne(id);
@@ -75,7 +76,43 @@ export class NotificationsController {
     return notification;
   }
 
-  @Patch()
+  @Patch('me')
+  @Roles(Role.DOCTOR, Role.PATIENT, Role.NURSE, Role.ADMIN)
+  async updateManyNotificationsStatus(
+    @Request() req: RequestWithUser,
+    @Body() updateReadNotificationDto: UpdateReadNotificationDto,
+  ) {
+    try {
+      return await this.notificationsService.updateManyReadStatus(
+        req.user.nationalId,
+        updateReadNotificationDto,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Patch(':id/me')
+  @Roles(Role.DOCTOR, Role.PATIENT, Role.NURSE, Role.ADMIN)
+  async updateNotificationStatus(
+    @Request() req: RequestWithUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateReadNotificationDto: UpdateReadNotificationDto,
+  ) {
+    try {
+      return await this.notificationsService.updateReadStatus(
+        req.user.nationalId,
+        id,
+        updateReadNotificationDto,
+      );
+    } catch (error) {
+      if (error instanceof NotFoundError)
+        throw new NotFoundException(error.message);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Patch(':id')
   @Roles(Role.ADMIN)
   async update(
     @Param('id', ParseIntPipe) id: number,
@@ -90,7 +127,7 @@ export class NotificationsController {
     }
   }
 
-  @Delete()
+  @Delete(':id')
   @Roles(Role.ADMIN)
   async remove(@Param('id', ParseIntPipe) id: number) {
     try {
