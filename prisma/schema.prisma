@@ -182,6 +182,7 @@ model Prescription {
   Medicine      Medicine    @relation(fields: [medicineId], references: [id])
   medicineId    Int
   dose          Int
+  lapse         Int
 
   @@unique(name: "medical_file_medicine_unique", fields: [medicalFileId, medicineId])
 }
