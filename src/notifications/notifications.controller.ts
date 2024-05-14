@@ -13,6 +13,8 @@ import {
   UseGuards,
   Request,
   DefaultValuePipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -37,6 +39,7 @@ export class NotificationsController {
 
   @Post()
   @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() createNotificationDto: CreateNotificationDto,
   ): Promise<NotificationDto> {
@@ -49,6 +52,7 @@ export class NotificationsController {
 
   @Get('me')
   @Roles(Role.DOCTOR, Role.PATIENT, Role.NURSE, Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
   async findUserNotifications(
     @Request() req: RequestWithUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -68,6 +72,7 @@ export class NotificationsController {
 
   @Get(':id')
   @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const notification = await this.notificationsService.findOne(id);
     if (!notification) {
@@ -78,6 +83,7 @@ export class NotificationsController {
 
   @Patch('me')
   @Roles(Role.DOCTOR, Role.PATIENT, Role.NURSE, Role.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async updateManyNotificationsStatus(
     @Request() req: RequestWithUser,
     @Body() updateReadNotificationDto: UpdateReadNotificationDto,
@@ -94,6 +100,7 @@ export class NotificationsController {
 
   @Patch(':id/me')
   @Roles(Role.DOCTOR, Role.PATIENT, Role.NURSE, Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
   async updateNotificationStatus(
     @Request() req: RequestWithUser,
     @Param('id', ParseIntPipe) id: number,
@@ -114,6 +121,7 @@ export class NotificationsController {
 
   @Patch(':id')
   @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateNotificationDto: UpdateNotificationDto,
@@ -129,6 +137,7 @@ export class NotificationsController {
 
   @Delete(':id')
   @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
   async remove(@Param('id', ParseIntPipe) id: number) {
     try {
       return await this.notificationsService.remove(id);
