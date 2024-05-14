@@ -23,13 +23,13 @@ import { Role } from '@prisma/client';
 @Controller('patient')
 @ApiTags('patient')
 @UseGuards(AuthGuard, RolesGuard)
+@ApiBearerAuth()
 export class PatientController {
   constructor(private readonly patientService: PatientService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(Role.ADMIN, Role.NURSE)
-  @ApiBearerAuth()
   async create(@Body() createPatientDto: CreatePatientDto) {
     try {
       const patient = await this.patientService.create(createPatientDto);
@@ -56,7 +56,6 @@ export class PatientController {
   @Patch(':id')
   @HttpCode(HttpStatus.CREATED)
   @Roles(Role.ADMIN, Role.NURSE)
-  @ApiBearerAuth()
   async update(
     @Param('id') id: string,
     @Body() updatePatientDto: UpdatePatientDto,

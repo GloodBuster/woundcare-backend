@@ -19,13 +19,13 @@ import { Role } from '@prisma/client';
 @Controller('users')
 @ApiTags('users')
 @UseGuards(AuthGuard, RolesGuard)
+@ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post('admin')
   @HttpCode(HttpStatus.CREATED)
   @Roles(Role.ADMIN)
-  @ApiBearerAuth()
   async createAdminUser(
     @Body() createAdminDto: CreateAdminDto,
   ): Promise<UserDto> {

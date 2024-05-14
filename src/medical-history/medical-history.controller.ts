@@ -21,6 +21,7 @@ import { Role } from '@prisma/client';
 
 @Controller('patient/medical-file/:id/medical-history')
 @UseGuards(AuthGuard)
+@ApiBearerAuth()
 @ApiTags('medical-history')
 export class MedicalHistoryController {
   constructor(private readonly medicalHistoryService: MedicalHistoryService) {}
@@ -28,7 +29,6 @@ export class MedicalHistoryController {
   @Post()
   @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.CREATED)
-  @ApiBearerAuth()
   async create(
     @Param('id', ParseIntPipe) id: number,
     @Body() createMedicalHistoryDto: CreateMedicalHistoryDto,
@@ -51,7 +51,6 @@ export class MedicalHistoryController {
   @Delete(':description')
   @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
   async remove(
     @Param('id', ParseIntPipe) id: number,
     @Param('description') description: string,
