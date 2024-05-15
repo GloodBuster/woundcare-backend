@@ -71,7 +71,7 @@ export class PrescriptionService {
         lapse: prescription.lapse,
       }));
 
-      return medicines;
+      return { medicines };
     } catch (error) {
       throw new UnexpectedError('An unexpected situation ocurred', {
         cause: error,
