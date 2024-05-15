@@ -46,6 +46,39 @@ export class PrescriptionService {
     });
   }
 
+  async findPrescriptionForPatient(patientId: string) {
+    try {
+      const medicalFile = await this.prismaService.medicalFile.findFirst({
+        where: {
+          patientId: patientId,
+        },
+      });
+
+      if (!medicalFile) return null;
+
+      const prescriptions = await this.prismaService.prescription.findMany({
+        where: {
+          medicalFileId: medicalFile.id,
+        },
+        include: {
+          Medicine: true,
+        },
+      });
+
+      const medicines = prescriptions.map((prescription) => ({
+        medicine: prescription.Medicine.name,
+        dose: prescription.dose,
+        lapse: prescription.lapse,
+      }));
+
+      return medicines;
+    } catch (error) {
+      throw new UnexpectedError('An unexpected situation ocurred', {
+        cause: error,
+      });
+    }
+  }
+
   remove(id: number) {
     try {
       return this.prismaService.prescription.delete({
