@@ -16,7 +16,7 @@ import { PrescriptionService } from './prescription.service';
 import { CreatePrescriptionDto } from './dto/create-prescription.dto';
 import { NotFoundError } from 'src/common/errors/service.error';
 import { RequestWithUser } from 'src/common/interfaces/request.interface';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
@@ -25,6 +25,7 @@ import { Role } from '@prisma/client';
 @Controller('prescription')
 @ApiTags('Prescription')
 @UseGuards(AuthGuard, RolesGuard)
+@ApiBearerAuth()
 export class PrescriptionController {
   constructor(private readonly prescriptionService: PrescriptionService) {}
 
