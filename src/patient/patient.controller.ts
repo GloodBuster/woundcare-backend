@@ -58,6 +58,7 @@ export class PatientController {
   }
 
   @Get('me')
+  @Roles(Role.PATIENT)
   @HttpCode(HttpStatus.OK)
   async getMe(@Request() req: RequestWithUser) {
     return await this.patientService.findOne(req.user.nationalId);
@@ -71,6 +72,7 @@ export class PatientController {
   }
 
   @Patch('me')
+  @Roles(Role.PATIENT)
   @HttpCode(HttpStatus.CREATED)
   async updateMe(
     @Request() req: RequestWithUser,
@@ -85,10 +87,10 @@ export class PatientController {
       throw new InternalServerErrorException(error.message, { cause: error });
     }
   }
-  
+
   @Patch(':id')
-  @HttpCode(HttpStatus.CREATED)
   @Roles(Role.ADMIN, Role.NURSE)
+  @HttpCode(HttpStatus.CREATED)
   async update(
     @Param('id') id: string,
     @Body() updatePatientDto: UpdatePatientDto,
