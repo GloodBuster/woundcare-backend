@@ -56,7 +56,7 @@ export class MedicineService {
   async update(id: number, updateMedicineDto: UpdateMedicineDto) {
     const existentMedicine = await this.prismaService.medicine.findUnique({
       where: {
-        name: updateMedicineDto.name,
+        id,
       },
       select: {
         id: true,
