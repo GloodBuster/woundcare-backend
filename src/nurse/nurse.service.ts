@@ -4,52 +4,49 @@ import { UpdateNurseDto } from './dto/update-nurse.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { Role } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { AlreadyExistsError, NotFoundError, UnexpectedError } from 'src/common/errors/service.error';
 
 @Injectable()
 export class NurseService {
   constructor(private readonly prismaService: PrismaService) {}
   async create(createNurseDto: CreateNurseDto) {
-    const searchUser = await this.prismaService.user.findUnique({
-      select: {
-        nationalId: true,
-      },
-      where: {
-        nationalId: createNurseDto.nationalId,
-      },
-    });
-
-    if (searchUser) {
-      throw new HttpException(
-        'this nurse already exists',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const hashedPassword = await bcrypt.hash(
-      createNurseDto.password,
-      Number(process.env.SALT_ROUNDS) || 10,
-    );
-
-    const user = await this.prismaService.user.create({
-      data: {
-        nationalId: createNurseDto.nationalId,
-        fullname: createNurseDto.fullname,
-        email: createNurseDto.email,
-        password: hashedPassword,
-        role: Role.NURSE,
-      },
-    });
-
-    const nurse = await this.prismaService.nurse.create({
-      data: {
-        nationalId: user.nationalId,
-        genre: createNurseDto.genre,
-        birthDate: createNurseDto.birthDate,
-        medicalCenter: createNurseDto.medicalCenter,
-      },
-    });
-
-    return nurse;
+   try {
+     
+     const hashedPassword = await bcrypt.hash(
+       createNurseDto.password,
+       Number(process.env.SALT_ROUNDS) || 10,
+     );
+ 
+     const [user, nurse] = await this.prismaService.$transaction([
+       this.prismaService.user.create({
+         data: {
+           nationalId: createNurseDto.nationalId,
+           fullname: createNurseDto.fullname,
+           email: createNurseDto.email,
+           password: hashedPassword,
+           role: Role.NURSE,
+         },
+       }),
+       this.prismaService.nurse.create({
+         data: {
+           nationalId: createNurseDto.nationalId,
+           genre: createNurseDto.genre,
+           birthDate: createNurseDto.birthDate,
+           medicalCenter: createNurseDto.medicalCenter,
+         },
+       })
+     ])
+     
+     return nurse;
+   } catch (error) {
+      if(error instanceof PrismaClientKnownRequestError){
+        if(error.code === "P2002"){
+          throw new AlreadyExistsError(`A nurse with the id ${createNurseDto.nationalId} already exists`, {cause: error})
+        }
+      }
+      throw new UnexpectedError("an unexpected situation ocurred", {cause: error})
+   }
   }
 
   async findAll() {
@@ -65,60 +62,54 @@ export class NurseService {
   }
 
   async update(id: string, updateNurseDto: UpdateNurseDto) {
-    const searchUser = await this.prismaService.nurse.findUnique({
-      select: {
-        nationalId: true,
-      },
-      where: {
-        nationalId: id,
-      },
-    });
-
-    if (!searchUser) {
-      throw new HttpException(
-        "this nurse doesn't exists",
-        HttpStatus.NOT_FOUND,
-      );
-    }
-
-    const nurse = await this.prismaService.nurse.update({
-      where: {
-        nationalId: id,
-      },
-      data: {
-        genre: updateNurseDto.genre,
-        birthDate: updateNurseDto.birthDate,
-        medicalCenter: updateNurseDto.medicalCenter,
-      },
-    });
-
-    return nurse;
+    try {
+  
+      const nurse = await this.prismaService.nurse.update({
+        where: {
+          nationalId: id,
+        },
+        data: {
+          genre: updateNurseDto.genre,
+          birthDate: updateNurseDto.birthDate,
+          medicalCenter: updateNurseDto.medicalCenter,
+        },
+      });
+  
+      return nurse;
+    } catch (error) {
+      if(error instanceof PrismaClientKnownRequestError){
+        if(error.code === "P2025"){
+          throw new NotFoundError(`A nurse with the id ${id} doesn't exists`, {cause: error})
+        }
+      }
+      throw new UnexpectedError("an unexpected situation ocurred", {cause: error})
+}
   }
 
   async remove(id: string) {
-    const nurse = await this.prismaService.nurse.findUnique({
-      where: {
-        nationalId: id,
-      },
-    });
 
-    if (!nurse) {
-      throw new HttpException(
-        'this nurse already exists',
-        HttpStatus.BAD_REQUEST,
-      );
+    try {
+      const [userNurse, nurse] = await this.prismaService.$transaction([
+        this.prismaService.nurse.delete({
+          where: {
+            nationalId: id,
+          },
+        }),
+        this.prismaService.user.delete({
+          where: {
+            nationalId: id,
+          },
+        })
+      ])
+  
+      return nurse
+    } catch (error) {
+      if(error instanceof PrismaClientKnownRequestError){
+        if(error.code === "P2025"){
+          throw new NotFoundError(`A nurse with the id ${id} doesn't exists`, {cause: error})
+        }
+      }
+      throw new UnexpectedError("an unexpected situation ocurred", {cause: error})
     }
-
-    await this.prismaService.nurse.delete({
-      where: {
-        nationalId: id,
-      },
-    });
-
-    return await this.prismaService.user.delete({
-      where: {
-        nationalId: id,
-      },
-    });
   }
 }

@@ -10,6 +10,8 @@ import {
   HttpStatus,
   InternalServerErrorException,
   UseGuards,
+  NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { NurseService } from './nurse.service';
 import { CreateNurseDto } from './dto/create-nurse.dto';
@@ -19,6 +21,7 @@ import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from '@prisma/client';
+import { AlreadyExistsError, NotFoundError } from 'src/common/errors/service.error';
 
 @ApiTags('nurse')
 @ApiBearerAuth()
@@ -32,9 +35,12 @@ export class NurseController {
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createNurseDto: CreateNurseDto) {
     try {
-      return await this.nurseService.create(createNurseDto);
+      const nurse = await this.nurseService.create(createNurseDto)
+      return nurse
     } catch (error) {
-      throw new InternalServerErrorException(error.message, { cause: error });
+      if(error instanceof AlreadyExistsError)
+        throw new ConflictException(error.message)
+      throw new InternalServerErrorException(error.message)
     }
   }
 
@@ -62,14 +68,22 @@ export class NurseController {
     try {
       return await this.nurseService.update(id, updateNurseDto);
     } catch (error) {
-      throw new InternalServerErrorException(error.message, { cause: error });
+      if(error instanceof NotFoundError)
+        throw new NotFoundException(error.message)
+      throw new InternalServerErrorException(error.message)
     }
   }
 
   @Delete(':id')
   @Roles(Role.ADMIN)
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string) {
-    return await this.nurseService.remove(id);
+    try {
+      return await this.nurseService.remove(id);
+    } catch (error) {
+      if(error instanceof NotFoundError)
+        throw new NotFoundException(error.message)
+      throw new InternalServerErrorException(error.message)
+    }
   }
 }
