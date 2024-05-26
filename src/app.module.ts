@@ -14,6 +14,8 @@ import { MedicineModule } from './medicine/medicine.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MedicalRecordsModule } from './medical-records/medical-records.module';
 import { PrescriptionModule } from './prescription/prescription.module';
+import { ConversationsModule } from './conversations/conversations.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { PrescriptionModule } from './prescription/prescription.module';
     NotificationsModule,
     MedicalRecordsModule,
     PrescriptionModule,
+    ConversationsModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
