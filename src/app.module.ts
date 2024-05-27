@@ -15,6 +15,8 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { MedicalRecordsModule } from './medical-records/medical-records.module';
 import { PrescriptionModule } from './prescription/prescription.module';
 import { ChatModule } from './chat/chat.module';
+import { ConversationsModule } from './conversations/conversations.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { ChatModule } from './chat/chat.module';
     MedicalRecordsModule,
     PrescriptionModule,
     ChatModule,
+    ConversationsModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
