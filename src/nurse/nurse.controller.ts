@@ -12,6 +12,7 @@ import {
   UseGuards,
   NotFoundException,
   ConflictException,
+  Request,
 } from '@nestjs/common';
 import { NurseService } from './nurse.service';
 import { CreateNurseDto } from './dto/create-nurse.dto';
@@ -21,7 +22,11 @@ import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from '@prisma/client';
-import { AlreadyExistsError, NotFoundError } from 'src/common/errors/service.error';
+import {
+  AlreadyExistsError,
+  NotFoundError,
+} from 'src/common/errors/service.error';
+import { RequestWithUser } from 'src/common/interfaces/request.interface';
 
 @ApiTags('nurse')
 @ApiBearerAuth()
@@ -35,12 +40,12 @@ export class NurseController {
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createNurseDto: CreateNurseDto) {
     try {
-      const nurse = await this.nurseService.create(createNurseDto)
-      return nurse
+      const nurse = await this.nurseService.create(createNurseDto);
+      return nurse;
     } catch (error) {
-      if(error instanceof AlreadyExistsError)
-        throw new ConflictException(error.message)
-      throw new InternalServerErrorException(error.message)
+      if (error instanceof AlreadyExistsError)
+        throw new ConflictException(error.message);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -49,6 +54,22 @@ export class NurseController {
   @HttpCode(HttpStatus.OK)
   async findAll() {
     return await this.nurseService.findAll();
+  }
+
+  @Get('me')
+  @Roles(Role.NURSE)
+  @HttpCode(HttpStatus.OK)
+  async findMe(@Request() req: RequestWithUser) {
+    try {
+      const nurse = await this.nurseService.findOne(req.user.nationalId);
+      if(!nurse) throw new NotFoundError('Nurse not found');
+      return nurse;
+    } catch (error) {
+      if (error instanceof NotFoundError) throw new NotFoundException(error.message);
+      throw new InternalServerErrorException('An unexpected situation ocurred', {
+        cause: error,
+      });
+    }
   }
 
   @Get(':id')
@@ -68,9 +89,9 @@ export class NurseController {
     try {
       return await this.nurseService.update(id, updateNurseDto);
     } catch (error) {
-      if(error instanceof NotFoundError)
-        throw new NotFoundException(error.message)
-      throw new InternalServerErrorException(error.message)
+      if (error instanceof NotFoundError)
+        throw new NotFoundException(error.message);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -81,9 +102,9 @@ export class NurseController {
     try {
       return await this.nurseService.remove(id);
     } catch (error) {
-      if(error instanceof NotFoundError)
-        throw new NotFoundException(error.message)
-      throw new InternalServerErrorException(error.message)
+      if (error instanceof NotFoundError)
+        throw new NotFoundException(error.message);
+      throw new InternalServerErrorException(error.message);
     }
   }
 }
