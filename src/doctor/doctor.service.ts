@@ -56,7 +56,11 @@ export class DoctorService {
   }
 
   async findAll() {
-    return await this.prismaService.doctor.findMany();
+    return await this.prismaService.doctor.findMany({
+      include: {
+        user: true
+      }
+    });
   }
 
   async findOne(id: string) {
@@ -64,6 +68,9 @@ export class DoctorService {
       where: {
         nationalId: id,
       },
+      include: {
+        user: true
+      }
     });
   }
 
