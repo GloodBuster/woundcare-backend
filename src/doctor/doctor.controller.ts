@@ -12,6 +12,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
   ConflictException,
+  Request,
 } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
@@ -25,6 +26,7 @@ import {
   AlreadyExistsError,
   NotFoundError,
 } from 'src/common/errors/service.error';
+import { RequestWithUser } from 'src/common/interfaces/request.interface';
 
 @ApiTags('Doctor')
 @ApiBearerAuth()
@@ -52,6 +54,19 @@ export class DoctorController {
   @HttpCode(HttpStatus.OK)
   findAll() {
     return this.doctorService.findAll();
+  }
+
+  @Get('me')
+  @Roles(Role.DOCTOR)
+  @HttpCode(HttpStatus.OK)
+  async findMe(@Request() req: RequestWithUser) {
+    try {
+      return this.doctorService.findOne(req.user.nationalId)
+    } catch (error) {
+      throw new InternalServerErrorException('An unexpected situation ocurred', {
+        cause: error,
+      })
+    }
   }
 
   @Get(':id')
