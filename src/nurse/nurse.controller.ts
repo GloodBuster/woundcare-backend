@@ -61,11 +61,8 @@ export class NurseController {
   @HttpCode(HttpStatus.OK)
   async findMe(@Request() req: RequestWithUser) {
     try {
-      const nurse = await this.nurseService.findOne(req.user.nationalId);
-      if(!nurse) throw new NotFoundError('Nurse not found');
-      return nurse;
+      return await this.nurseService.findOne(req.user.nationalId);
     } catch (error) {
-      if (error instanceof NotFoundError) throw new NotFoundException(error.message);
       throw new InternalServerErrorException('An unexpected situation ocurred', {
         cause: error,
       });
