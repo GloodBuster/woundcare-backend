@@ -52,7 +52,14 @@ export class NurseService {
   async findAll() {
     return await this.prismaService.nurse.findMany({
       include: {
-        user: true
+        user: {
+          select: {
+            nationalId: true,
+            fullname: true,
+            email: true,
+            role: true,
+          }
+        }
       }
     });
   }
@@ -63,7 +70,14 @@ export class NurseService {
         nationalId: id,
       },
       include: {
-        user: true
+        user: {
+          select: {
+            nationalId: true,
+            fullname: true,
+            email: true,
+            role: true,
+          }
+        }
       }
     });
   }
