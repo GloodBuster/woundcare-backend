@@ -32,7 +32,7 @@ export class NurseService {
          data: {
            nationalId: createNurseDto.nationalId,
            genre: createNurseDto.genre,
-           birthDate: createNurseDto.birthDate,
+           birthDate: new Date(createNurseDto.birthDate).toISOString(),
            medicalCenter: createNurseDto.medicalCenter,
          },
        })
@@ -50,7 +50,11 @@ export class NurseService {
   }
 
   async findAll() {
-    return await this.prismaService.nurse.findMany();
+    return await this.prismaService.nurse.findMany({
+      include: {
+        user: true
+      }
+    });
   }
 
   async findOne(id: string) {
@@ -58,6 +62,9 @@ export class NurseService {
       where: {
         nationalId: id,
       },
+      include: {
+        user: true
+      }
     });
   }
 
