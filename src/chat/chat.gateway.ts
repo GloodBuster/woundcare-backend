@@ -1,9 +1,13 @@
-import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer, ConnectedSocket } from '@nestjs/websockets';
+import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer, ConnectedSocket, OnGatewayInit, WsException } from '@nestjs/websockets';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { OnModuleInit } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+import { AuthService } from 'src/auth/auth.service';
+import { ForbiddenException, NotFoundException, UseFilters, UseGuards } from '@nestjs/common';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { NotFoundError } from 'src/common/errors/service.error';
+import { WebSocketExceptionFilter } from 'src/common/errors/ws-exception.filter';
 
 interface Message {
   conversationId: number,
@@ -18,46 +22,75 @@ interface Message {
     credentials: true,
   },
 })
-export class ChatGateway implements OnModuleInit {
-  constructor(private readonly chatService: ChatService){}
+@UseFilters(new WebSocketExceptionFilter())
+export class ChatGateway implements OnGatewayInit {
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly authService: AuthService
+  ){}
 
   @WebSocketServer()
   public server: Server
+  public inc = 4
 
 
-  onModuleInit() {
-    this.server.on("connection", (socket : Socket) => {
-      const {name, token} = socket.handshake.auth
+  afterInit() {
+    try {
+      this.server.on("connection", async (socket : Socket) => {
+        const token = socket.handshake.headers.authorization || socket.handshake.auth.token
+        const user = await this.authService.verifyToken(token)
+  
+        if(!user){
+          socket.disconnect()
+          throw new NotFoundException("This user cannot be found")
+        }
+        const room = await this.chatService.handleRoom(user.nationalId)
 
-      if(!token){
-        socket.disconnect()
-        return;
-      }
-
-      console.log(`token: ${token}`)
-
-      socket.on("disconnect", () => {
-        console.log("cliente desconectado")
+        socket.join(`room-${room}`)
+  
+        console.log(`user connected: ${user.fullname}`)
+  
+        socket.on("disconnect", () => {
+          console.log("cliente desconectado")
+        })
       })
-    })
+    } catch (error) {
+      if(error instanceof NotFoundError){
+        throw new WsException(error.message)
+      }
+    }
   }
 
   @SubscribeMessage("send-message")
-  handleMessage(
-    @MessageBody() message: Message,
-    @ConnectedSocket() client: Socket
+  async handleSending(
+    @MessageBody() message: string,
+    @ConnectedSocket() client: Socket,
   ) {
-    const {token} = client.handshake.auth
+    try {
+      const token = client.handshake.headers.authorization || client.handshake.auth.token
+  
+      const user = await this.authService.verifyToken(token)
+  
+      if(!user){
+        return
+      }
+      
+      if (!message) {
+        return
+      }
+  
+      const payload = await this.chatService.sendMessage(client, user.nationalId, message)
 
-    console.log(`conversation id: ${message.conversationId}, message: ${message.text}`)
-    if (!message) {
-      return
+      console.log(payload)
+  
+      this.server.to(`room-${payload.message.conversationId}`).emit("on-message", payload )
+
+
+    } catch (error) {
+      throw new WsException(error.message)
     }
-
-    this.server.emit("on-message",
-    {
-      userId: client.id,
-      message: message,
-    })
   }
+
+  @SubscribeMessage("message")
+  async handleMessage() {}
 }
