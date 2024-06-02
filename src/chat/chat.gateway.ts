@@ -9,11 +9,10 @@ import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { NotFoundError } from 'src/common/errors/service.error';
 import { WebSocketExceptionFilter } from 'src/common/errors/ws-exception.filter';
 
-interface Message {
+export interface Message {
   conversationId: number,
   text: string
 }
-
 @WebSocketGateway({
   cors: {
     origin: true,
@@ -37,16 +36,18 @@ export class ChatGateway implements OnGatewayInit {
   afterInit() {
     try {
       this.server.on("connection", async (socket : Socket) => {
-        const token = socket.handshake.headers.authorization || socket.handshake.auth.token
+
+        console.log(socket.handshake.auth.token, socket.handshake.headers.authorization)
+        const token = socket?.handshake?.headers?.authorization || socket?.handshake?.auth?.token
         const user = await this.authService.verifyToken(token)
-  
+  //
         if(!user){
           socket.disconnect()
-          throw new NotFoundException("This user cannot be found")
+          return
         }
         const room = await this.chatService.handleRoom(user.nationalId)
 
-        socket.join(`room-${room}`)
+        room?.forEach(room => socket.join(`room-${room}`))
   
         console.log(`user connected: ${user.fullname}`)
   
@@ -58,16 +59,17 @@ export class ChatGateway implements OnGatewayInit {
       if(error instanceof NotFoundError){
         throw new WsException(error.message)
       }
+      throw new WsException("a pedazos"+ error.message)
     }
   }
 
   @SubscribeMessage("send-message")
   async handleSending(
-    @MessageBody() message: string,
+    @MessageBody() message: Message,
     @ConnectedSocket() client: Socket,
   ) {
     try {
-      const token = client.handshake.headers.authorization || client.handshake.auth.token
+      const token = client?.handshake?.headers?.authorization || client?.handshake?.auth?.token
   
       const user = await this.authService.verifyToken(token)
   
@@ -78,6 +80,8 @@ export class ChatGateway implements OnGatewayInit {
       if (!message) {
         return
       }
+
+      console.log(message)
   
       const payload = await this.chatService.sendMessage(client, user.nationalId, message)
 

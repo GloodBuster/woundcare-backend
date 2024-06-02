@@ -3,6 +3,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Socket } from 'socket.io';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { NotFoundError, UnexpectedError } from 'src/common/errors/service.error';
+import { WsException } from '@nestjs/websockets';
+import { Message } from './chat.gateway';
 
 @Injectable()
 export class ChatService {
@@ -13,7 +15,7 @@ export class ChatService {
 
   async handleRoom(nationalId: string) {
     try {
-      const conversation = await this.prismaService.conversation.findFirstOrThrow({
+      const conversation = await this.prismaService.conversation.findMany({
         where: {
           OR: [
             { medicalFile: 
@@ -32,34 +34,38 @@ export class ChatService {
               }}
           ]},
       })
+
+      if(!conversation) {
+        throw new NotFoundError('Conversation not found');
+      }
   
-      return conversation.id
+      return conversation.map(e => e.id)
     } catch (error) {
       if(error instanceof PrismaClientKnownRequestError){
         if(error.code === 'P2025'){
-          throw new NotFoundError("You don't belong to a room");
+          throw new WsException("You don't belong to a room");
         }
         throw new UnexpectedError("An unexpected situation happened")
       }
     }
   }
 
-  async sendMessage(socket: Socket, senderId: string, content: string) {
+  async sendMessage(socket: Socket, senderId: string, payload: Message) {
     const conversation = await this.handleRoom(senderId)
 
-    if(!conversation){
-      throw new ForbiddenException("You cannot send a message because you don't belong to a conversation")
+    if(!(conversation?.includes(payload.conversationId))) {
+      throw new ForbiddenException("You cannot send a message because you don't belong to this conversation")
     }
 
     const message = await this.prismaService.message.create({
       data: {
-        conversationId: conversation,
+        conversationId: payload.conversationId,
         userId: senderId,
-        text: content,
+        text: payload.text,
       }
     })
 
-    socket.to(`room-${conversation}`).emit("new-message", message)
+    socket.to(`room-${payload.conversationId}`).emit("new-message", message)
 
     return {message}
   }
