@@ -1,8 +1,8 @@
 import { ArgumentsHost, Catch } from "@nestjs/common";
-import { BaseWsExceptionFilter } from "@nestjs/websockets";
+import { BaseWsExceptionFilter, WsException } from "@nestjs/websockets";
 
 
-@Catch()
+@Catch(WsException)
 export class WebSocketExceptionFilter extends BaseWsExceptionFilter {
     catch(exception: any, host: ArgumentsHost): void {
         const args = host.getArgs()
