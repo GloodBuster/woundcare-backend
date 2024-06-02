@@ -171,6 +171,7 @@ model Message {
   conversationId Int?
   user           User          @relation(fields: [userId], references: [nationalId])
   userId         String
+  text           String?
   image          String?
   createdAt      DateTime      @default(now())
 }
