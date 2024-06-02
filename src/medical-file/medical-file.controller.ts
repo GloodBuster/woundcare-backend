@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { MedicalFileService } from './medical-file.service';
 import { CreateMedicalFileDto } from './dto/create-medical-file.dto';
@@ -43,6 +44,23 @@ export class MedicalFileController {
   @HttpCode(HttpStatus.OK)
   findAll() {
     return this.medicalFileService.findAll();
+  }
+
+  @Get('patient/:nationalId')
+  @Roles(Role.ADMIN, Role.NURSE, Role.DOCTOR)
+  @HttpCode(HttpStatus.OK)
+  async findByPatient(@Param('nationalId') nationalId: string) {
+    try {
+      const medicalFile =
+        await this.medicalFileService.findOneByPatientId(nationalId);
+      if (!medicalFile) {
+        throw new NotFoundException('Medical file not found');
+      }
+      return medicalFile;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
   }
 
   @Get(':id')

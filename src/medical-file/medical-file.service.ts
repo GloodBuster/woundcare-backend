@@ -86,6 +86,15 @@ export class MedicalFileService {
     });
   }
 
+  async findOneByPatientId(patientId: string) {
+    return await this.prismaService.medicalFile.findFirst({
+      where: {
+        patientId,
+        dischargeDate: null,
+      },
+    });
+  }
+
   async update(id: number, updateMedicalFileDto: UpdateMedicalFileDto) {
     const medicalFile = await this.prismaService.medicalFile.findUnique({
       where: {
