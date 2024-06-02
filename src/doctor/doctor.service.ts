@@ -35,7 +35,7 @@ export class DoctorService {
           data: {
             nationalId: createDoctorDto.nationalId,
             genre: createDoctorDto.genre,
-            birthDate: createDoctorDto.birthDate,
+            birthDate: new Date(createDoctorDto.birthDate).toISOString(),
             medicalCenter: createDoctorDto.medicalCenter,
           },
         }),

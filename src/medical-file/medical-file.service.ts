@@ -59,7 +59,7 @@ export class MedicalFileService {
         patientId: createMedicalFileDto.patientId,
         doctorId: createMedicalFileDto.doctorId,
         nurseId: createMedicalFileDto.nurseId,
-        date: createMedicalFileDto.date,
+        date: new Date(createMedicalFileDto.date).toISOString(),
         description: createMedicalFileDto.description,
         dischargeDate: createMedicalFileDto.dischargeDate,
         physicalExam: createMedicalFileDto.physicalExam,
@@ -67,6 +67,20 @@ export class MedicalFileService {
         previousTreatment: createMedicalFileDto.previousTreatment,
         labResults: createMedicalFileDto.labResults,
         carePlan: createMedicalFileDto.carePlan,
+        Conversation: {
+          createMany: {
+            data: [
+              {
+                nurseId: createMedicalFileDto.nurseId,
+                userId: createMedicalFileDto.doctorId,
+              },
+              {
+                nurseId: createMedicalFileDto.nurseId,
+                userId: createMedicalFileDto.patientId,
+              },
+            ],
+          },
+        },
       },
       //TODO: Manage the medicine asignation to a medical file
     });
