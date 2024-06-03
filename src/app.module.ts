@@ -17,6 +17,7 @@ import { PrescriptionModule } from './prescription/prescription.module';
 import { ChatModule } from './chat/chat.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { MessagesModule } from './messages/messages.module';
+import { BandageChangeModule } from './bandage-change/bandage-change.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { MessagesModule } from './messages/messages.module';
     ChatModule,
     ConversationsModule,
     MessagesModule,
+    BandageChangeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
