@@ -70,6 +70,17 @@ export class MedicalFileController {
     return this.medicalFileService.findOne(+id);
   }
 
+  @Patch('patient/:nationalId/discharge')
+  @Roles(Role.ADMIN, Role.NURSE)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async dischargePatient(@Param('nationalId') nationalId: string) {
+    try {
+      await this.medicalFileService.dischargePatient(nationalId);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
+  }
+
   @Patch(':id')
   @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.CREATED)
