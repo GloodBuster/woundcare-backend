@@ -2,6 +2,8 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateMedicalFileDto } from './dto/create-medical-file.dto';
 import { UpdateMedicalFileDto } from './dto/update-medical-file.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PatientStatus } from '@prisma/client';
+import { UnexpectedError } from 'src/common/errors/service.error';
 
 @Injectable()
 export class MedicalFileService {
@@ -54,36 +56,46 @@ export class MedicalFileService {
       );
     }
 
-    const medicalFile = await this.prismaService.medicalFile.create({
-      data: {
-        patientId: createMedicalFileDto.patientId,
-        doctorId: createMedicalFileDto.doctorId,
-        nurseId: createMedicalFileDto.nurseId,
-        date: new Date(createMedicalFileDto.date).toISOString(),
-        description: createMedicalFileDto.description,
-        dischargeDate: createMedicalFileDto.dischargeDate,
-        physicalExam: createMedicalFileDto.physicalExam,
-        medicalHistory: createMedicalFileDto.medicalHistory,
-        previousTreatment: createMedicalFileDto.previousTreatment,
-        labResults: createMedicalFileDto.labResults,
-        carePlan: createMedicalFileDto.carePlan,
-        Conversation: {
-          createMany: {
-            data: [
-              {
-                nurseId: createMedicalFileDto.nurseId,
-                userId: createMedicalFileDto.doctorId,
-              },
-              {
-                nurseId: createMedicalFileDto.nurseId,
-                userId: createMedicalFileDto.patientId,
-              },
-            ],
+    const [medicalFile, _] = await this.prismaService.$transaction([
+      this.prismaService.medicalFile.create({
+        data: {
+          patientId: createMedicalFileDto.patientId,
+          doctorId: createMedicalFileDto.doctorId,
+          nurseId: createMedicalFileDto.nurseId,
+          date: new Date(createMedicalFileDto.date).toISOString(),
+          description: createMedicalFileDto.description,
+          dischargeDate: createMedicalFileDto.dischargeDate,
+          physicalExam: createMedicalFileDto.physicalExam,
+          medicalHistory: createMedicalFileDto.medicalHistory,
+          previousTreatment: createMedicalFileDto.previousTreatment,
+          labResults: createMedicalFileDto.labResults,
+          carePlan: createMedicalFileDto.carePlan,
+          Conversation: {
+            createMany: {
+              data: [
+                {
+                  nurseId: createMedicalFileDto.nurseId,
+                  userId: createMedicalFileDto.doctorId,
+                },
+                {
+                  nurseId: createMedicalFileDto.nurseId,
+                  userId: createMedicalFileDto.patientId,
+                },
+              ],
+            },
           },
         },
-      },
-      //TODO: Manage the medicine asignation to a medical file
-    });
+        //TODO: Manage the medicine asignation to a medical file
+      }),
+      this.prismaService.patient.update({
+        where: {
+          nationalId: createMedicalFileDto.patientId,
+        },
+        data: {
+          status: PatientStatus.ACTIVE,
+        },
+      }),
+    ]);
 
     return medicalFile;
   }
@@ -107,6 +119,34 @@ export class MedicalFileService {
         dischargeDate: null,
       },
     });
+  }
+
+  async dischargePatient(patientId: string): Promise<void> {
+    try {
+      await this.prismaService.$transaction([
+        this.prismaService.medicalFile.updateMany({
+          where: {
+            patientId,
+            dischargeDate: null,
+          },
+          data: {
+            dischargeDate: new Date().toISOString(),
+          },
+        }),
+        this.prismaService.patient.update({
+          where: {
+            nationalId: patientId,
+          },
+          data: {
+            status: PatientStatus.INACTIVE,
+          },
+        }),
+      ]);
+    } catch (error) {
+      throw new UnexpectedError('An unexpected error ocurred', {
+        cause: error,
+      });
+    }
   }
 
   async update(id: number, updateMedicalFileDto: UpdateMedicalFileDto) {
