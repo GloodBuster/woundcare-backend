@@ -10,6 +10,8 @@ import {
   UnexpectedError,
 } from 'src/common/errors/service.error';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { PaginatedResponse } from 'src/common/responses/paginatedResponse';
+import { PatientDto } from './dto/patient.dto';
 
 @Injectable()
 export class PatientService {
@@ -62,6 +64,57 @@ export class PatientService {
         }
       }
       throw new UnexpectedError(error.message, { cause: error });
+    }
+  }
+
+  async findPatientsPage(
+    nurseId: string,
+    page: number,
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<PatientDto>> {
+    try {
+      const [patientsCount, patients] = await this.prismaService.$transaction([
+        this.prismaService.patient.count({
+          where: {
+            MedicalFile: {
+              some: {
+                nurseId,
+              },
+            },
+          },
+        }),
+        this.prismaService.patient.findMany({
+          where: {
+            MedicalFile: {
+              some: {
+                nurseId,
+              },
+            },
+          },
+          take: itemsPerPage,
+          skip: (page - 1) * itemsPerPage,
+          include: {
+            user: {
+              select: {
+                fullname: true,
+              },
+            },
+          },
+        }),
+      ]);
+      return {
+        items: patients,
+        meta: {
+          totalItems: patientsCount,
+          totalPages: Math.ceil(patientsCount / itemsPerPage),
+          page,
+          itemsPerPage,
+        },
+      };
+    } catch (error) {
+      throw new UnexpectedError('An unexpected situation ocurred', {
+        cause: error,
+      });
     }
   }
 

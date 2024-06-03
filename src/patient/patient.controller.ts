@@ -13,6 +13,9 @@ import {
   Request,
   ConflictException,
   NotFoundException,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PatientService } from './patient.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
@@ -27,6 +30,8 @@ import {
   AlreadyExistsError,
   NotFoundError,
 } from 'src/common/errors/service.error';
+import { PaginatedResponse } from 'src/common/responses/paginatedResponse';
+import { PatientDto } from './dto/patient.dto';
 
 @Controller('patient')
 @ApiTags('patient')
@@ -55,6 +60,26 @@ export class PatientController {
   @HttpCode(HttpStatus.OK)
   async findAll() {
     return await this.patientService.findAll();
+  }
+
+  @Get('nurse')
+  @Roles(Role.NURSE)
+  @HttpCode(HttpStatus.OK)
+  async findNursePatients(
+    @Request() req: RequestWithUser,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<PatientDto>> {
+    try {
+      return await this.patientService.findPatientsPage(
+        req.user.nationalId,
+        page,
+        itemsPerPage,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
   }
 
   @Get('me')
