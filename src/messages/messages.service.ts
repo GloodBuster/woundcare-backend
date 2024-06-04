@@ -41,4 +41,36 @@ export class MessagesService {
       });
     }
   }
+
+  async findNurseMessagesByConversationId(
+    conversationId: number,
+    nurseId: string,
+    page: number,
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<Message>> {
+    try {
+      const messages = await this.prismaService.message.findMany({
+        where: { conversationId, Conversation: { nurseId } },
+        take: itemsPerPage,
+        skip: (page - 1) * itemsPerPage,
+        orderBy: { createdAt: 'desc' },
+      });
+      const totalItems = await this.prismaService.message.count({
+        where: { conversationId, Conversation: { nurseId } },
+      });
+      return {
+        items: messages,
+        meta: {
+          totalItems,
+          totalPages: Math.ceil(totalItems / itemsPerPage),
+          page,
+          itemsPerPage,
+        },
+      };
+    } catch (error) {
+      throw new UnexpectedError('An unexpected situation ocurred', {
+        cause: error,
+      });
+    }
+  }
 }
