@@ -58,7 +58,7 @@ export class MessagesController {
     }
   }
 
-  @Get(':id/nurse')
+  @Get('conversation/:id/nurse')
   @Roles(Role.NURSE)
   @HttpCode(HttpStatus.OK)
   async findNurseMessages(
