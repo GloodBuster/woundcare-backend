@@ -86,6 +86,7 @@ export class PatientService {
         }),
         this.prismaService.patient.findMany({
           where: {
+            status: PatientStatus.ACTIVE,
             MedicalFile: {
               some: {
                 nurseId,
@@ -138,6 +139,7 @@ export class PatientService {
         }),
         this.prismaService.patient.findMany({
           where: {
+            status: PatientStatus.INACTIVE,
             MedicalFile: {
               some: {
                 nurseId,
