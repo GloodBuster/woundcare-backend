@@ -38,9 +38,9 @@ export class DoctorController {
   @Post()
   @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createDoctorDto: CreateDoctorDto) {
+  async create(@Body() createDoctorDto: CreateDoctorDto) {
     try {
-      return this.doctorService.create(createDoctorDto);
+      return await this.doctorService.create(createDoctorDto);
     } catch (error) {
       if (error instanceof AlreadyExistsError) {
         throw new ConflictException(error.message);
