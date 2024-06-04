@@ -61,6 +61,52 @@ export class ConversationsService {
     }
   }
 
+  async findNurseConversations(
+    conversationId: number,
+    nurseId: string,
+  ): Promise<Conversation | null> {
+    try {
+      return await this.prismaService.conversation.findFirst({
+        where: {
+          id: conversationId,
+          nurseId,
+        },
+        include: {
+          user: {
+            select: {
+              fullname: true,
+              role: true,
+              patient: {
+                select: {
+                  genre: true,
+                },
+              },
+              doctor: {
+                select: {
+                  genre: true,
+                },
+              },
+            },
+          },
+          nurse: {
+            select: {
+              genre: true,
+              user: {
+                select: {
+                  fullname: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new UnexpectedError('An unexpected situation ocurred', {
+        cause: error,
+      });
+    }
+  }
+
   async findNurseConversationsWithPatients(
     nurseId: string,
     page: number,
@@ -178,7 +224,7 @@ export class ConversationsService {
           };
         },
       );
-      
+
       return {
         items: conversationItems,
         meta: {
