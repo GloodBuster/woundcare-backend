@@ -9,6 +9,9 @@ import {
   InternalServerErrorException,
   Post,
   Body,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ConversationsService } from './conversations.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -20,6 +23,8 @@ import { RequestWithUser } from 'src/common/interfaces/request.interface';
 import { Conversation } from './entities/conversation.entity';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { NotFoundError } from 'src/common/errors/service.error';
+import { PaginatedResponse } from 'src/common/responses/paginatedResponse';
+import { ConversationDto } from './dto/conversation.dto';
 
 @ApiTags('conversations')
 @ApiBearerAuth()
@@ -46,18 +51,60 @@ export class ConversationsController {
     }
   }
 
+  @Get('nurse/patient')
+  @Roles(Role.NURSE)
+  @HttpCode(HttpStatus.OK)
+  async findNurseConversationsWithPatients(
+    @Request() req: RequestWithUser,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<ConversationDto>> {
+    try {
+      return await this.conversationsService.findNurseConversationsWithPatients(
+        req.user.nationalId,
+        page,
+        itemsPerPage,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
+  }
+
+  @Get('nurse/doctor')
+  @Roles(Role.NURSE)
+  @HttpCode(HttpStatus.OK)
+  async findNurseConversationsWithDoctors(
+    @Request() req: RequestWithUser,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<ConversationDto>> {
+    try {
+      return await this.conversationsService.findNurseConversationsWithDoctors(
+        req.user.nationalId,
+        page,
+        itemsPerPage,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
+  }
+
   @Post()
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createConversationDto: CreateConversationDto) {
     try {
-      const conversation = this.conversationsService.create(createConversationDto)
-      return conversation
+      const conversation = this.conversationsService.create(
+        createConversationDto,
+      );
+      return conversation;
     } catch (error) {
-      if(error instanceof NotFoundError){
-        throw new NotFoundException(error.message)
+      if (error instanceof NotFoundError) {
+        throw new NotFoundException(error.message);
       }
-      throw new InternalServerErrorException(error.message)
+      throw new InternalServerErrorException(error.message);
     }
   }
 }
