@@ -3,7 +3,7 @@ import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-import { Role } from '@prisma/client';
+import { PatientStatus, Role } from '@prisma/client';
 import {
   AlreadyExistsError,
   NotFoundError,
@@ -67,7 +67,7 @@ export class PatientService {
     }
   }
 
-  async findPatientsPage(
+  async findActivePatientsPage(
     nurseId: string,
     page: number,
     itemsPerPage: number,
@@ -76,6 +76,59 @@ export class PatientService {
       const [patientsCount, patients] = await this.prismaService.$transaction([
         this.prismaService.patient.count({
           where: {
+            status: PatientStatus.ACTIVE,
+            MedicalFile: {
+              some: {
+                nurseId,
+              },
+            },
+          },
+        }),
+        this.prismaService.patient.findMany({
+          where: {
+            MedicalFile: {
+              some: {
+                nurseId,
+              },
+            },
+          },
+          take: itemsPerPage,
+          skip: (page - 1) * itemsPerPage,
+          include: {
+            user: {
+              select: {
+                fullname: true,
+              },
+            },
+          },
+        }),
+      ]);
+      return {
+        items: patients,
+        meta: {
+          totalItems: patientsCount,
+          totalPages: Math.ceil(patientsCount / itemsPerPage),
+          page,
+          itemsPerPage,
+        },
+      };
+    } catch (error) {
+      throw new UnexpectedError('An unexpected situation ocurred', {
+        cause: error,
+      });
+    }
+  }
+
+  async findInactivePatientsPage(
+    nurseId: string,
+    page: number,
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<PatientDto>> {
+    try {
+      const [patientsCount, patients] = await this.prismaService.$transaction([
+        this.prismaService.patient.count({
+          where: {
+            status: PatientStatus.INACTIVE,
             MedicalFile: {
               some: {
                 nurseId,

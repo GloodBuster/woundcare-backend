@@ -62,17 +62,37 @@ export class PatientController {
     return await this.patientService.findAll();
   }
 
-  @Get('nurse')
+  @Get('active/nurse')
   @Roles(Role.NURSE)
   @HttpCode(HttpStatus.OK)
-  async findNursePatients(
+  async findNurseActivePatients(
     @Request() req: RequestWithUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
     itemsPerPage: number,
   ): Promise<PaginatedResponse<PatientDto>> {
     try {
-      return await this.patientService.findPatientsPage(
+      return await this.patientService.findActivePatientsPage(
+        req.user.nationalId,
+        page,
+        itemsPerPage,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
+  }
+
+  @Get('inactive/nurse')
+  @Roles(Role.NURSE)
+  @HttpCode(HttpStatus.OK)
+  async findNurseInactivePatients(
+    @Request() req: RequestWithUser,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<PatientDto>> {
+    try {
+      return await this.patientService.findInactivePatientsPage(
         req.user.nationalId,
         page,
         itemsPerPage,
