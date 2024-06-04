@@ -12,6 +12,8 @@ import {
   Query,
   DefaultValuePipe,
   ParseIntPipe,
+  Param,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConversationsService } from './conversations.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -87,6 +89,32 @@ export class ConversationsController {
         itemsPerPage,
       );
     } catch (error) {
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
+  }
+
+  @Get(':id/nurse')
+  @Roles(Role.NURSE)
+  @HttpCode(HttpStatus.OK)
+  async findNurseConversation(
+    @Request() req: RequestWithUser,
+    @Param('id', ParseIntPipe) conversationId: number,
+  ): Promise<Conversation> {
+    try {
+      const conversation =
+        await this.conversationsService.findNurseConversations(
+          conversationId,
+          req.user.nationalId,
+        );
+
+      if (!conversation)
+        throw new UnauthorizedException(
+          'The conversation does not belong to the nurse',
+        );
+
+      return conversation;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
       throw new InternalServerErrorException(error.message, { cause: error });
     }
   }
