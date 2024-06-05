@@ -13,6 +13,9 @@ import {
   NotFoundException,
   ConflictException,
   Request,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { NurseService } from './nurse.service';
 import { CreateNurseDto } from './dto/create-nurse.dto';
@@ -27,6 +30,8 @@ import {
   NotFoundError,
 } from 'src/common/errors/service.error';
 import { RequestWithUser } from 'src/common/interfaces/request.interface';
+import { PaginatedResponse } from 'src/common/responses/paginatedResponse';
+import { NurseDto } from './dto/nurse.dto';
 
 @ApiTags('nurse')
 @ApiBearerAuth()
@@ -50,10 +55,18 @@ export class NurseController {
   }
 
   @Get()
-  @Roles(Role.ADMIN, Role.NURSE, Role.DOCTOR)
+  @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
-  async findAll() {
-    return await this.nurseService.findAll();
+  async findNursesPage(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<NurseDto>> {
+    try {
+      return await this.nurseService.findNursesPage(page, itemsPerPage);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
   }
 
   @Get('me')
@@ -63,9 +76,12 @@ export class NurseController {
     try {
       return await this.nurseService.findOne(req.user.nationalId);
     } catch (error) {
-      throw new InternalServerErrorException('An unexpected situation ocurred', {
-        cause: error,
-      });
+      throw new InternalServerErrorException(
+        'An unexpected situation ocurred',
+        {
+          cause: error,
+        },
+      );
     }
   }
 
