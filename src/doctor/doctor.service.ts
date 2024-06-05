@@ -10,6 +10,8 @@ import {
   UnexpectedError,
 } from 'src/common/errors/service.error';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { PaginatedResponse } from 'src/common/responses/paginatedResponse';
+import { DoctorDto } from './dto/doctor.dto';
 
 @Injectable()
 export class DoctorService {
@@ -55,19 +57,42 @@ export class DoctorService {
     }
   }
 
-  async findAll() {
-    return await this.prismaService.doctor.findMany({
-      include: {
-        user: {
-          select: {
-            nationalId: true,
-            fullname: true,
-            email: true,
-            role: true,
-          }
-        }
-      }
-    });
+  async findDoctorsPage(
+    page: number,
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<DoctorDto>> {
+    try {
+      const [totalItems, doctors] = await this.prismaService.$transaction([
+        this.prismaService.doctor.count(),
+        this.prismaService.doctor.findMany({
+          include: {
+            user: {
+              select: {
+                nationalId: true,
+                fullname: true,
+                email: true,
+                role: true,
+              },
+            },
+          },
+          take: itemsPerPage,
+          skip: (page - 1) * itemsPerPage,
+        }),
+      ]);
+      return {
+        items: doctors,
+        meta: {
+          itemsPerPage,
+          page,
+          totalItems,
+          totalPages: Math.ceil(totalItems / itemsPerPage),
+        },
+      };
+    } catch (error) {
+      throw new UnexpectedError('An unexpected error ocurred', {
+        cause: error,
+      });
+    }
   }
 
   async findOne(id: string) {
@@ -82,9 +107,9 @@ export class DoctorService {
             fullname: true,
             email: true,
             role: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
   }
 
