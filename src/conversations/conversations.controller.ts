@@ -53,6 +53,26 @@ export class ConversationsController {
     }
   }
 
+  @Get('user/nurse')
+  @Roles(Role.DOCTOR, Role.PATIENT)
+  @HttpCode(HttpStatus.OK)
+  async findUserConversationsWithNurses(
+    @Request() req: RequestWithUser,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<ConversationDto>> {
+    try {
+      return await this.conversationsService.findUserConversationsWithNurses(
+        req.user.nationalId,
+        page,
+        itemsPerPage,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
+  }
+
   @Get('nurse/patient')
   @Roles(Role.NURSE)
   @HttpCode(HttpStatus.OK)
@@ -102,7 +122,7 @@ export class ConversationsController {
   ): Promise<Conversation> {
     try {
       const conversation =
-        await this.conversationsService.findNurseConversations(
+        await this.conversationsService.findNurseConversation(
           conversationId,
           req.user.nationalId,
         );
@@ -110,6 +130,31 @@ export class ConversationsController {
       if (!conversation)
         throw new UnauthorizedException(
           'The conversation does not belong to the nurse',
+        );
+
+      return conversation;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
+  }
+
+  @Get(':id/user')
+  @Roles(Role.DOCTOR, Role.PATIENT)
+  @HttpCode(HttpStatus.OK)
+  async findUserConversation(
+    @Request() req: RequestWithUser,
+    @Param('id', ParseIntPipe) conversationId: number,
+  ): Promise<Conversation> {
+    try {
+      const conversation = await this.conversationsService.findUserConversation(
+        conversationId,
+        req.user.nationalId,
+      );
+
+      if (!conversation)
+        throw new UnauthorizedException(
+          'The conversation does not belong to the user',
         );
 
       return conversation;
