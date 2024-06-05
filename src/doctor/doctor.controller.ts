@@ -13,6 +13,9 @@ import {
   InternalServerErrorException,
   ConflictException,
   Request,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
@@ -27,6 +30,8 @@ import {
   NotFoundError,
 } from 'src/common/errors/service.error';
 import { RequestWithUser } from 'src/common/interfaces/request.interface';
+import { PaginatedResponse } from 'src/common/responses/paginatedResponse';
+import { DoctorDto } from './dto/doctor.dto';
 
 @ApiTags('Doctor')
 @ApiBearerAuth()
@@ -52,8 +57,16 @@ export class DoctorController {
   @Get()
   @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.OK)
-  findAll() {
-    return this.doctorService.findAll();
+  async findDoctorsPage(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<DoctorDto>> {
+    try {
+      return await this.doctorService.findDoctorsPage(page, itemsPerPage);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
   }
 
   @Get('me')
@@ -61,11 +74,14 @@ export class DoctorController {
   @HttpCode(HttpStatus.OK)
   async findMe(@Request() req: RequestWithUser) {
     try {
-      return this.doctorService.findOne(req.user.nationalId)
+      return this.doctorService.findOne(req.user.nationalId);
     } catch (error) {
-      throw new InternalServerErrorException('An unexpected situation ocurred', {
-        cause: error,
-      })
+      throw new InternalServerErrorException(
+        'An unexpected situation ocurred',
+        {
+          cause: error,
+        },
+      );
     }
   }
 
