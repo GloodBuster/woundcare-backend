@@ -10,7 +10,6 @@ import { PatientModule } from './patient/patient.module';
 import { NurseModule } from './nurse/nurse.module';
 import { DoctorModule } from './doctor/doctor.module';
 import { MedicalFileModule } from './medical-file/medical-file.module';
-import { MedicineModule } from './medicine/medicine.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MedicalRecordsModule } from './medical-records/medical-records.module';
 import { PrescriptionModule } from './prescription/prescription.module';
@@ -29,7 +28,6 @@ import { MessagesModule } from './messages/messages.module';
     NurseModule,
     DoctorModule,
     MedicalFileModule,
-    MedicineModule,
     NotificationsModule,
     MedicalRecordsModule,
     PrescriptionModule,
