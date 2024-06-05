@@ -6,16 +6,18 @@ import {
   NotFoundError,
   UnexpectedError,
 } from 'src/common/errors/service.error';
+import { UpdatePrescriptionDto } from './dto/update-prescription.dto';
 
 @Injectable()
 export class PrescriptionService {
   constructor(private readonly prismaService: PrismaService) {}
   async create(createPrescriptionDto: CreatePrescriptionDto) {
     try {
-      return this.prismaService.prescription.create({
+      return await this.prismaService.prescription.create({
         data: {
           medicalFileId: createPrescriptionDto.medicalFileId,
-          medicineId: createPrescriptionDto.medicineId,
+          medicineName: createPrescriptionDto.medicineName,
+          medicineDescription: createPrescriptionDto.medicineDescription,
           dose: createPrescriptionDto.dose,
           lapse: createPrescriptionDto.lapse,
         },
@@ -34,12 +36,12 @@ export class PrescriptionService {
     }
   }
 
-  findAll() {
-    return this.prismaService.prescription.findMany();
+  async findAll() {
+    return await this.prismaService.prescription.findMany();
   }
 
-  findOne(id: number) {
-    return this.prismaService.prescription.findUnique({
+  async findOne(id: number) {
+    return await this.prismaService.prescription.findUnique({
       where: {
         id: id,
       },
@@ -60,18 +62,15 @@ export class PrescriptionService {
         where: {
           medicalFileId: medicalFile.id,
         },
-        include: {
-          Medicine: true,
-        },
+        select:{
+          medicineName: true,
+          medicineDescription: true,
+          dose: true,
+          lapse: true,
+        }
       });
 
-      const medicines = prescriptions.map((prescription) => ({
-        medicine: prescription.Medicine.name,
-        dose: prescription.dose,
-        lapse: prescription.lapse,
-      }));
-
-      return { medicines };
+      return prescriptions;
     } catch (error) {
       throw new UnexpectedError('An unexpected situation ocurred', {
         cause: error,
@@ -79,9 +78,31 @@ export class PrescriptionService {
     }
   }
 
-  remove(id: number) {
+  async update(id: number, updatePrescriptionDto: UpdatePrescriptionDto) {
     try {
-      return this.prismaService.prescription.delete({
+      return await this.prismaService.prescription.update({
+        where: {
+          id: id,
+        },
+        data: {
+          ...updatePrescriptionDto,
+        }
+      })
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundError('there is no prescription with this id');
+        }
+      }
+      throw new UnexpectedError('an unexpected error ocurred', {
+        cause: error,
+      });
+    }
+  }
+
+  async remove(id: number) {
+    try {
+      return await this.prismaService.prescription.delete({
         where: {
           id: id,
         },
