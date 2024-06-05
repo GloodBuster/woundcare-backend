@@ -91,7 +91,7 @@ export class MessagesController {
   }
 
   @Get('conversation/:id/user')
-  @Roles(Role.NURSE)
+  @Roles(Role.DOCTOR, Role.PATIENT)
   @HttpCode(HttpStatus.OK)
   async findUserMessages(
     @Request() req: RequestWithUser,
