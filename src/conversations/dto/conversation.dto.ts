@@ -5,6 +5,9 @@ export type ConversationDto = {
   medicalFileId: number;
   lastMessageText: string | null;
   lastMessageDate: Date | null;
+  nurse: {
+    fullname: string;
+  };
   user: {
     fullname: string;
   };
@@ -16,6 +19,7 @@ export type ConversationQuery = {
   nurseId: string;
   medicalFileId: number;
   userfullname: string;
+  nursefullname: string;
   lastmessagedate: Date | null;
   lastmessagecontent: string | null;
 };
