@@ -4,7 +4,7 @@ import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
-import { ForbiddenException, NotFoundException, UseFilters, UseGuards } from '@nestjs/common';
+import { ForbiddenException, NotFoundException, UnauthorizedException, UseFilters, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { NotFoundError } from 'src/common/errors/service.error';
 import { WebSocketExceptionFilter } from 'src/common/errors/ws-exception.filter';
@@ -34,33 +34,35 @@ export class ChatGateway implements OnGatewayInit {
 
 
   afterInit() {
-    try {
       this.server.on("connection", async (socket : Socket) => {
+        try {
+  
+          console.log(socket.handshake.auth.token, socket.handshake.headers.authorization)
+          const token = socket?.handshake?.headers?.authorization || socket?.handshake?.auth?.token
+          const user = await this.authService.verifyToken(token)
+    //
+          if(!user){
+            this.disconnect(socket, 'unauthorized')
+            return;
+          }
+          const room = await this.chatService.handleRoom(user.nationalId)
 
-        console.log(socket.handshake.auth.token, socket.handshake.headers.authorization)
-        const token = socket?.handshake?.headers?.authorization || socket?.handshake?.auth?.token
-        const user = await this.authService.verifyToken(token)
-  //
-        if(!user){
-          socket.disconnect()
-          return
+          if(room?.length === 0) {
+            this.disconnect(socket, 'you dont belong to a room')
+            return;
+          }
+  
+          room?.forEach(room => socket.join(`room-${room}`))
+    
+          console.log(`user connected: ${user.fullname}`)
+    
+          socket.on("disconnect", () => {
+            console.log("cliente desconectado")
+          })
+        } catch (error) {
+          this.disconnect(socket, error.message)
         }
-        const room = await this.chatService.handleRoom(user.nationalId)
-
-        room?.forEach(room => socket.join(`room-${room}`))
-  
-        console.log(`user connected: ${user.fullname}`)
-  
-        socket.on("disconnect", () => {
-          console.log("cliente desconectado")
-        })
       })
-    } catch (error) {
-      if(error instanceof NotFoundError){
-        throw new WsException(error.message)
-      }
-      throw new WsException("a pedazos"+ error.message)
-    }
   }
 
   @SubscribeMessage("send-message")
@@ -74,10 +76,12 @@ export class ChatGateway implements OnGatewayInit {
       const user = await this.authService.verifyToken(token)
   
       if(!user){
+        this.disconnect(client, 'Unauthorized')
         return
       }
       
       if (!message) {
+        this.disconnect(client, "there is no message")
         return
       }
 
@@ -91,8 +95,13 @@ export class ChatGateway implements OnGatewayInit {
 
 
     } catch (error) {
-      throw new WsException(error.message)
+      this.disconnect(client, error.message)
     }
+  }
+
+  private disconnect(socket: Socket, message: string) {
+    socket.emit('error', new UnauthorizedException(message))
+    socket.disconnect()
   }
 
   @SubscribeMessage("message")
