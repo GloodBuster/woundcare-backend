@@ -11,6 +11,7 @@ import {
   HttpStatus,
   Request,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { PrescriptionService } from './prescription.service';
 import { CreatePrescriptionDto } from './dto/create-prescription.dto';
@@ -21,6 +22,7 @@ import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from '@prisma/client';
+import { UpdatePrescriptionDto } from './dto/update-prescription.dto';
 
 @Controller('prescription')
 @ApiTags('Prescription')
@@ -31,10 +33,10 @@ export class PrescriptionController {
 
   @Post()
   @Roles(Role.ADMIN, Role.NURSE)
-  @HttpCode(HttpStatus.OK)
-  create(@Body() createPrescriptionDto: CreatePrescriptionDto) {
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Body() createPrescriptionDto: CreatePrescriptionDto) {
     try {
-      return this.prescriptionService.create(createPrescriptionDto);
+      return await this.prescriptionService.create(createPrescriptionDto);
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw new NotFoundException(error.message);
@@ -46,15 +48,15 @@ export class PrescriptionController {
   @Get()
   @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.OK)
-  findAll() {
-    return this.prescriptionService.findAll();
+  async findAll() {
+    return await this.prescriptionService.findAll();
   }
 
   @Get('me')
   @Roles(Role.PATIENT)
   @HttpCode(HttpStatus.OK)
   async findPrescriptionForMe(@Request() req: RequestWithUser) {
-    const medicines = this.prescriptionService.findPrescriptionForPatient(
+    const medicines = await this.prescriptionService.findPrescriptionForPatient(
       req.user.nationalId,
     );
 
@@ -68,16 +70,30 @@ export class PrescriptionController {
   @Get(':id')
   @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('PatientId') patientId: string) {
-    return this.prescriptionService.findPrescriptionForPatient(patientId);
+  async findOne(@Param('PatientId') patientId: string) {
+    return await this.prescriptionService.findPrescriptionForPatient(patientId);
+  }
+
+  @Patch(':id')
+  @Roles(Role.ADMIN, Role.NURSE)
+  @HttpCode(HttpStatus.CREATED)
+  async update(@Param('id') id: string ,@Body() updatePrescriptionDto: UpdatePrescriptionDto) {
+    try {
+      return await this.prescriptionService.update(+id, updatePrescriptionDto)
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
   @Delete(':id')
   @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.OK)
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     try {
-      return this.prescriptionService.remove(+id);
+      return await this.prescriptionService.remove(+id);
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw new NotFoundException(error.message);
