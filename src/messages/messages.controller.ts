@@ -6,6 +6,7 @@ import {
   HttpStatus,
   InternalServerErrorException,
   NotFoundException,
+  Param,
   ParseIntPipe,
   Query,
   Request,
@@ -43,6 +44,70 @@ export class MessagesController {
         page,
         itemsPerPage,
       );
+      return {
+        items: paginatedMessages.items.map((message) => {
+          return {
+            ...message,
+            owner: message.userId === req.user.nationalId ? true : false,
+          };
+        }),
+        meta: paginatedMessages.meta,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Get('conversation/:id/nurse')
+  @Roles(Role.NURSE)
+  @HttpCode(HttpStatus.OK)
+  async findNurseMessages(
+    @Request() req: RequestWithUser,
+    @Param('id', ParseIntPipe) conversationId: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<MessageDto>> {
+    try {
+      const paginatedMessages =
+        await this.messagesService.findNurseMessagesByConversationId(
+          conversationId,
+          req.user.nationalId,
+          page,
+          itemsPerPage,
+        );
+      return {
+        items: paginatedMessages.items.map((message) => {
+          return {
+            ...message,
+            owner: message.userId === req.user.nationalId ? true : false,
+          };
+        }),
+        meta: paginatedMessages.meta,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Get('conversation/:id/user')
+  @Roles(Role.DOCTOR, Role.PATIENT)
+  @HttpCode(HttpStatus.OK)
+  async findUserMessages(
+    @Request() req: RequestWithUser,
+    @Param('id', ParseIntPipe) conversationId: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<MessageDto>> {
+    try {
+      const paginatedMessages =
+        await this.messagesService.findUserMessagesByConversationId(
+          conversationId,
+          req.user.nationalId,
+          page,
+          itemsPerPage,
+        );
       return {
         items: paginatedMessages.items.map((message) => {
           return {
