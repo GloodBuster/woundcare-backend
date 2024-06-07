@@ -124,13 +124,6 @@ model MedicalFile {
   @@unique([patientId, date])
 }
 
-model Medicine {
-  id           Int            @id @default(autoincrement())
-  name         String         @unique
-  description  String
-  Prescription Prescription[]
-}
-
 model Notifications {
   id      Int              @id @default(autoincrement())
   message String
@@ -177,13 +170,13 @@ model Message {
 }
 
 model Prescription {
-  id            Int         @id @default(autoincrement())
-  MedicalFile   MedicalFile @relation(fields: [medicalFileId], references: [id])
-  medicalFileId Int
-  Medicine      Medicine    @relation(fields: [medicineId], references: [id])
-  medicineId    Int
-  dose          Int
-  lapse         Int
+  id                  Int         @id @default(autoincrement())
+  MedicalFile         MedicalFile @relation(fields: [medicalFileId], references: [id])
+  medicalFileId       Int
+  medicineName        String
+  medicineDescription String
+  dose                Int
+  lapse               Int
 
-  @@unique(name: "medical_file_medicine_unique", fields: [medicalFileId, medicineId])
+  @@unique(name: "medical_file_medicine_unique", fields: [medicalFileId, medicineName])
 }

@@ -1,13 +1,17 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreatePrescriptionDto {
   @IsNumber()
   @IsNotEmpty()
   medicalFileId: number;
 
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  medicineId: number;
+  medicineName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  medicineDescription: string
 
   @IsNumber()
   @IsNotEmpty()
