@@ -17,6 +17,7 @@ import { ChatModule } from './chat/chat.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { MessagesModule } from './messages/messages.module';
 import { BandageChangeModule } from './bandage-change/bandage-change.module';
+import { ConfigModule as CustomConfigModule } from './common/config/config.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { BandageChangeModule } from './bandage-change/bandage-change.module';
     ConversationsModule,
     MessagesModule,
     BandageChangeModule,
+    CustomConfigModule,
   ],
   controllers: [AppController],
   providers: [AppService],
