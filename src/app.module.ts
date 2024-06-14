@@ -17,6 +17,7 @@ import { ChatModule } from './chat/chat.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { MessagesModule } from './messages/messages.module';
 import { BandageChangeModule } from './bandage-change/bandage-change.module';
+import { ConfigService } from './common/config/config.service';
 
 @Module({
   imports: [
