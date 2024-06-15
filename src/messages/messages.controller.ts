@@ -7,10 +7,14 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Param,
+  ParseFilePipeBuilder,
   ParseIntPipe,
+  Post,
   Query,
   Request,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -21,6 +25,7 @@ import { Role } from '@prisma/client';
 import { RequestWithUser } from 'src/common/interfaces/request.interface';
 import { PaginatedResponse } from 'src/common/responses/paginatedResponse';
 import { MessageDto } from './dto/message.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('messages')
 @ApiBearerAuth()
@@ -28,6 +33,22 @@ import { MessageDto } from './dto/message.dto';
 @Controller('messages')
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
+
+  @Post('upload')
+  @Roles(Role.PATIENT)
+  @UseInterceptors(FileInterceptor('file'))
+  async sendPhoto(@UploadedFile(
+    new ParseFilePipeBuilder()
+    .addMaxSizeValidator({
+      maxSize: 5000
+    })
+    .addFileTypeValidator({
+      fileType: 'jpeg'
+    })
+    .build({
+      errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
+    })
+  ) photo: Express.Multer.File) {}
 
   @Get('patient')
   @Roles(Role.PATIENT)
