@@ -20,8 +20,7 @@ import { ConfigModule } from 'src/common/config/config.module';
         );
 
         return {
-          secret: configService.getJwtSecret(),
-          secretOrPrivateKey: configService.getJwtSecret(),
+          secret: configService.getJwtSecret() || '4gfDCcu2Y29vyc*MsTyzDA49E',
           signOptions: { expiresIn: configService.getJwtExpiration() },
         };
       },
