@@ -23,7 +23,6 @@ import { ConfigModule as CustomConfigModule } from './common/config/config.modul
   imports: [
     ConfigModule.forRoot(),
     CustomConfigModule,
-    AuthModule,
     UsersModule,
     PatientModule,
     AllergiesModule,
@@ -38,6 +37,7 @@ import { ConfigModule as CustomConfigModule } from './common/config/config.modul
     ConversationsModule,
     MessagesModule,
     BandageChangeModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
