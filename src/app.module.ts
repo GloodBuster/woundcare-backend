@@ -25,15 +25,6 @@ import { ConfigService } from './common/config/config.service';
   imports: [
     ConfigModule.forRoot(),
     CustomConfigModule,
-    JwtModule.registerAsync({
-      global: true,
-      imports: [CustomConfigModule],
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.getJwtSecret(),
-        signOptions: { expiresIn: configService.getJwtExpiration() },
-      }),
-    }),
     AuthModule,
     UsersModule,
     PatientModule,

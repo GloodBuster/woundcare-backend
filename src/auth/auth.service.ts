@@ -3,6 +3,7 @@ import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { User } from '@prisma/client';
 import { JsonWebTokenError, JwtService } from '@nestjs/jwt';
+import { LoginResponseDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -11,7 +12,7 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  async login(nationalId: string, password: string): Promise<User | null> {
+  async login(nationalId: string, password: string): Promise<LoginResponseDto | null> {
     const user = await this.usersService.findOne(nationalId);
 
     if (!user) {
@@ -24,7 +25,14 @@ export class AuthService {
       return null;
     }
 
-    return user;
+    const token = await this.jwtService.signAsync({
+      nationalId: user.nationalId,
+    });
+
+    return {
+      token,
+      role: user.role,
+    };
   }
 
   async verifyToken(token : string) {
