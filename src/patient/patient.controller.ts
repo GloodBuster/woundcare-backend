@@ -102,6 +102,26 @@ export class PatientController {
     }
   }
 
+  @Get('active/doctor')
+  @Roles(Role.DOCTOR)
+  @HttpCode(HttpStatus.OK)
+  async findDoctorActivePatients(
+    @Request() req: RequestWithUser,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<PatientDto>> {
+    try {
+      return await this.patientService.findActiveDoctorPatientsPage(
+        req.user.nationalId,
+        page,
+        itemsPerPage,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
+  }
+
   @Get('me')
   @Roles(Role.PATIENT)
   @HttpCode(HttpStatus.OK)

@@ -67,6 +67,59 @@ export class PatientService {
     }
   }
 
+  async findActiveDoctorPatientsPage(
+    doctorId: string,
+    page: number,
+    itemsPerPage: number,
+  ): Promise<PaginatedResponse<PatientDto>> {
+    try {
+      const [patientsCount, patients] = await this.prismaService.$transaction([
+        this.prismaService.patient.count({
+          where: {
+            status: PatientStatus.ACTIVE,
+            MedicalFile: {
+              some: {
+                doctorId,
+              },
+            },
+          },
+        }),
+        this.prismaService.patient.findMany({
+          where: {
+            status: PatientStatus.ACTIVE,
+            MedicalFile: {
+              some: {
+                doctorId,
+              },
+            },
+          },
+          take: itemsPerPage,
+          skip: (page - 1) * itemsPerPage,
+          include: {
+            user: {
+              select: {
+                fullname: true,
+              },
+            },
+          },
+        }),
+      ]);
+      return {
+        items: patients,
+        meta: {
+          totalItems: patientsCount,
+          totalPages: Math.ceil(patientsCount / itemsPerPage),
+          page,
+          itemsPerPage,
+        },
+      };
+    } catch (error) {
+      throw new UnexpectedError('An unexpected situation ocurred', {
+        cause: error,
+      });
+    }
+  }
+
   async findActivePatientsPage(
     nurseId: string,
     page: number,
