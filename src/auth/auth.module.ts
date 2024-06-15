@@ -14,10 +14,14 @@ import { ConfigModule } from 'src/common/config/config.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        console.log('configService.getJwtSecret()', configService.getJwtSecret());
-        
+        console.log(
+          'configService.getJwtSecret()',
+          configService.getJwtSecret(),
+        );
+
         return {
           secret: configService.getJwtSecret(),
+          secretOrPrivateKey: configService.getJwtSecret(),
           signOptions: { expiresIn: configService.getJwtExpiration() },
         };
       },
