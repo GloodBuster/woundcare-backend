@@ -20,8 +20,8 @@ export class ConversationsService {
     try {
       return await this.prismaService.conversation.findFirst({
         where: {
+          userId: nationalId,
           medicalFile: {
-            patientId: nationalId,
             dischargeDate: null,
           },
         },
