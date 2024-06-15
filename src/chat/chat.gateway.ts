@@ -30,7 +30,6 @@ export class ChatGateway implements OnGatewayInit {
 
   @WebSocketServer()
   public server: Server
-  public inc = 4
 
 
   afterInit() {
@@ -55,6 +54,8 @@ export class ChatGateway implements OnGatewayInit {
           room?.forEach(room => socket.join(`room-${room}`))
     
           console.log(`user connected: ${user.fullname}`)
+
+          console.log(socket.rooms)
     
           socket.on("disconnect", () => {
             console.log("cliente desconectado")
