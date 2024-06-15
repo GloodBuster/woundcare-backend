@@ -18,11 +18,23 @@ import { ConversationsModule } from './conversations/conversations.module';
 import { MessagesModule } from './messages/messages.module';
 import { BandageChangeModule } from './bandage-change/bandage-change.module';
 import { ConfigModule as CustomConfigModule } from './common/config/config.module';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigService } from './common/config/config.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     CustomConfigModule,
+    JwtModule.registerAsync({
+      global: true,
+      imports: [CustomConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.getJwtSecret(),
+        signOptions: { expiresIn: configService.getJwtExpiration() },
+      }),
+    }),
+    AuthModule,
     UsersModule,
     PatientModule,
     AllergiesModule,
@@ -37,7 +49,6 @@ import { ConfigModule as CustomConfigModule } from './common/config/config.modul
     ConversationsModule,
     MessagesModule,
     BandageChangeModule,
-    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
