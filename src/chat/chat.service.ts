@@ -18,21 +18,20 @@ export class ChatService {
       const conversation = await this.prismaService.conversation.findMany({
         where: {
           OR: [
-            { medicalFile: 
-              { patientId: nationalId, 
-                dischargeDate: null 
-              } 
-            },
-            { medicalFile:
-              { doctorId: nationalId,
+            { 
+              nurseId: nationalId,
+              medicalFile: {
                 dischargeDate: null
               }
-            },
-            {medicalFile: {
-              nurseId: nationalId,
-              dischargeDate: null
-              }}
-          ]},
+             },
+            { 
+              userId: nationalId, 
+              medicalFile: {
+                dischargeDate: null
+              }
+            }
+          ]
+        },
       })
 
       if(!conversation) {
