@@ -14,8 +14,8 @@ import { ApiTags } from '@nestjs/swagger';
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly jwtService: JwtService,
     private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
   ) {}
   @Post('login')
   async login(@Body() loginDto: LoginDto): Promise<LoginResponseDto> {
@@ -28,7 +28,7 @@ export class AuthController {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      const token = await this.jwtService.signAsync({
+      const token = this.jwtService.sign({
         nationalId: user.nationalId,
       });
 

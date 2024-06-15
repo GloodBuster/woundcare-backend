@@ -25,7 +25,7 @@ import { ConfigService } from './common/config/config.service';
   imports: [
     ConfigModule.forRoot(),
     CustomConfigModule,
-    /*JwtModule.registerAsync({
+    JwtModule.registerAsync({
       global: true,
       imports: [CustomConfigModule],
       inject: [ConfigService],
@@ -33,10 +33,6 @@ import { ConfigService } from './common/config/config.service';
         secret: configService.getJwtSecret(),
         signOptions: { expiresIn: configService.getJwtExpiration() },
       }),
-    }),*/
-    JwtModule.register({
-      secret: 'e4knXhLV6hA$z32XWV8*9%GyT',
-      signOptions: { expiresIn: '30d' },
     }),
     AuthModule,
     UsersModule,
