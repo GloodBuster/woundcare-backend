@@ -22,6 +22,7 @@ import { ConfigModule as CustomConfigModule } from './common/config/config.modul
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    CustomConfigModule,
     AuthModule,
     UsersModule,
     PatientModule,
@@ -37,7 +38,6 @@ import { ConfigModule as CustomConfigModule } from './common/config/config.modul
     ConversationsModule,
     MessagesModule,
     BandageChangeModule,
-    CustomConfigModule,
   ],
   controllers: [AppController],
   providers: [AppService],
