@@ -8,12 +8,48 @@ import {
   NotFoundError,
   UnexpectedError,
 } from 'src/common/errors/service.error';
-import { Prisma } from '@prisma/client';
+import { NotificationType, Prisma } from '@prisma/client';
 import { UpdateReadNotificationDto } from './dto/update-read-notification.dto';
+import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+  ) {}
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {name: 'dailyNotifications'})
+  async sendDailyNotifications() {
+    const users = await this.prismaService.patient.findMany({
+      select: {
+        nationalId: true,
+      },
+      where: {
+        MedicalFile: {
+          some: {
+            dischargeDate: null
+          }
+        }
+      }
+    })
+
+
+    users.forEach( user => {
+
+      const notification: CreateNotificationDto = {
+        message: "Hola, este es un recoradtorio para el vendaje de hoy",
+        type: NotificationType.MONITORING_SIGNS_AND_SYMPTOMS,
+        userId: user.nationalId
+      }
+
+      this.create( notification )
+
+    })
+
+    console.log('notificaciones enviadas')
+
+    return;
+  }
 
   async create(
     createNotificationDto: CreateNotificationDto,
