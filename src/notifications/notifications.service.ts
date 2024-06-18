@@ -53,6 +53,82 @@ export class NotificationsService {
     return;
   }
 
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async sendBandageChangeNotifications() {
+    const date = new Date()
+    const patients = await this.prismaService.bandageChange.findMany({
+      where: {
+        //!ojaldre aca
+        date: date,
+      },
+      select: {
+        patientId: true,
+      }
+    })
+
+    patients.forEach(async (patient) => {
+      const notification: CreateNotificationDto = {
+        message: "Hola, es hora de cambiar el vendaje, recuerda que es hoy!",
+        type: NotificationType.BANDAGE_CHANGE,
+        userId: patient.patientId
+      }
+
+      await this.create(notification)
+
+      console.log("notification sent to patient "+ patient.patientId)
+
+    })
+
+    console.log("se enviaron los recordatorios de cambio de vendaje")
+
+    return;
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async sendMedicationReminder() {
+    const date = new Date()
+
+    const prescriptions = await this.prismaService.prescription.findMany({
+      where: {
+        MedicalFile: {
+          dischargeDate: null
+        }
+      },
+      select: {
+        id: true,
+        nextMedicine: true,
+        medicineName: true,
+        lapse: true,
+        MedicalFile: {
+          select: {
+            patientId: true
+          }
+        }
+      }
+    })
+
+    const prescriptionsForNow = prescriptions.filter(prescription => {
+      return date.getHours() === prescription.nextMedicine.getHours()
+    })
+
+    prescriptionsForNow.forEach( async (prescription) => {
+      const medicineNotification: CreateNotificationDto = {
+        message: `Recuerda que es hora de tomar ${prescription.medicineName}`,
+        type: NotificationType.MEDICATION_TIME,
+        userId: prescription.MedicalFile.patientId,
+      }
+
+      await this.create(medicineNotification)
+
+      const updatedPrescription = await this.prescriptionService.update(prescription.id, {nextMedicine: addHour(prescription.nextMedicine, prescription.lapse).toISOString()})
+
+      console.log(`prescription number ${updatedPrescription} was updated`)
+    })
+
+    console.log("notifications were sent")
+
+  }
+
   async create(
     createNotificationDto: CreateNotificationDto,
   ): Promise<NotificationDto> {
