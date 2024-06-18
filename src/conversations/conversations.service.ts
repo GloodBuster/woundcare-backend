@@ -167,6 +167,7 @@ export class ConversationsService {
         INNER JOIN "User" u ON c."userId" = u."nationalId"
         INNER JOIN "Nurse" n ON c."nurseId" = n."nationalId"
         INNER JOIN "User" nurseUser ON n."nationalId" = nurseUser."nationalId"
+        INNER JOIN "MedicalFile" mf ON c."medicalFileId" = mf."id"
         LEFT JOIN (
           SELECT m."conversationId", MAX(m."createdAt") as lastMessageDate, m2."text" as lastMessageContent
           FROM "Message" m
@@ -177,7 +178,7 @@ export class ConversationsService {
           )
           GROUP BY m."conversationId", m2."text"
         ) sub ON c."id" = sub."conversationId"
-        WHERE c."nurseId" = ${nurseId} AND u."role" = 'PATIENT'
+        WHERE c."nurseId" = ${nurseId} AND u."role" = 'PATIENT' AND mf."dischargeDate" IS NULL
         GROUP BY c."id", sub.lastMessageContent, u."fullname", nurseUser."fullname", sub.lastMessageDate
         ORDER BY CASE WHEN sub.lastMessageDate IS NULL THEN 0 ELSE 1 END, sub.lastMessageDate DESC
         LIMIT ${itemsPerPage} OFFSET ${itemsPerPage * (page - 1)}
@@ -187,6 +188,9 @@ export class ConversationsService {
           nurseId,
           user: {
             role: Role.PATIENT,
+          },
+          medicalFile: {
+            dischargeDate: null,
           },
         },
       });
@@ -240,6 +244,7 @@ export class ConversationsService {
         INNER JOIN "User" u ON c."userId" = u."nationalId"
         INNER JOIN "Nurse" n ON c."nurseId" = n."nationalId"
         INNER JOIN "User" nurseUser ON n."nationalId" = nurseUser."nationalId"
+        INNER JOIN "MedicalFile" mf ON c."medicalFileId" = mf."id"
         LEFT JOIN (
           SELECT m."conversationId", MAX(m."createdAt") as lastMessageDate, m2."text" as lastMessageContent
           FROM "Message" m
@@ -250,7 +255,7 @@ export class ConversationsService {
           )
           GROUP BY m."conversationId", m2."text"
         ) sub ON c."id" = sub."conversationId"
-        WHERE c."nurseId" = ${nurseId} AND u."role" = 'DOCTOR'
+        WHERE c."nurseId" = ${nurseId} AND u."role" = 'DOCTOR' AND mf."dischargeDate" IS NULL
         GROUP BY c."id", sub.lastMessageContent, u."fullname", nurseUser."fullname", sub.lastMessageDate
         ORDER BY CASE WHEN sub.lastMessageDate IS NULL THEN 0 ELSE 1 END, sub.lastMessageDate DESC
         LIMIT ${itemsPerPage} OFFSET ${itemsPerPage * (page - 1)}
@@ -260,6 +265,9 @@ export class ConversationsService {
           nurseId,
           user: {
             role: Role.DOCTOR,
+          },
+          medicalFile: {
+            dischargeDate: null,
           },
         },
       });
@@ -313,6 +321,7 @@ export class ConversationsService {
         INNER JOIN "User" u ON c."userId" = u."nationalId"
         INNER JOIN "Nurse" n ON c."nurseId" = n."nationalId"
         INNER JOIN "User" nurseUser ON n."nationalId" = nurseUser."nationalId"
+        INNER JOIN "MedicalFile" mf ON c."medicalFileId" = mf."id"
         LEFT JOIN (
           SELECT m."conversationId", MAX(m."createdAt") as lastMessageDate, m2."text" as lastMessageContent
           FROM "Message" m
@@ -323,7 +332,7 @@ export class ConversationsService {
           )
           GROUP BY m."conversationId", m2."text"
         ) sub ON c."id" = sub."conversationId"
-        WHERE c."userId" = ${userId}
+        WHERE c."userId" = ${userId} AND mf."dischargeDate" IS NULL
         GROUP BY c."id", sub.lastMessageContent, u."fullname", nurseUser."fullname", sub.lastMessageDate
         ORDER BY CASE WHEN sub.lastMessageDate IS NULL THEN 0 ELSE 1 END, sub.lastMessageDate DESC
         LIMIT ${itemsPerPage} OFFSET ${itemsPerPage * (page - 1)}
@@ -331,6 +340,9 @@ export class ConversationsService {
       const totalItems = await this.prismaService.conversation.count({
         where: {
           userId,
+          medicalFile: {
+            dischargeDate: null,
+          },
         },
       });
       const conversationItems: ConversationDto[] = conversations.map(
