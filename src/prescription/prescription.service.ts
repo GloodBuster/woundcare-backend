@@ -7,6 +7,7 @@ import {
   UnexpectedError,
 } from 'src/common/errors/service.error';
 import { UpdatePrescriptionDto } from './dto/update-prescription.dto';
+import { addHour } from '@formkit/tempo';
 
 @Injectable()
 export class PrescriptionService {
@@ -20,6 +21,7 @@ export class PrescriptionService {
           medicineDescription: createPrescriptionDto.medicineDescription,
           dose: createPrescriptionDto.dose,
           lapse: createPrescriptionDto.lapse,
+          nextMedicine: addHour(new Date(), createPrescriptionDto.lapse)
         },
       });
     } catch (error) {
@@ -94,7 +96,7 @@ export class PrescriptionService {
           throw new NotFoundError('there is no prescription with this id');
         }
       }
-      throw new UnexpectedError('an unexpected error ocurred', {
+      throw new UnexpectedError(error.message, {
         cause: error,
       });
     }
@@ -113,7 +115,7 @@ export class PrescriptionService {
           throw new NotFoundError('there is no prescription with this id');
         }
       }
-      throw new UnexpectedError('an unexpected error ocurred', {
+      throw new UnexpectedError(error.message, {
         cause: error,
       });
     }
