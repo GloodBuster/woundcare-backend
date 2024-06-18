@@ -18,11 +18,17 @@ import { ConversationsModule } from './conversations/conversations.module';
 import { MessagesModule } from './messages/messages.module';
 import { BandageChangeModule } from './bandage-change/bandage-change.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     ConfigModule.forRoot(),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '/public/'),
+      serveStaticOptions: { index: false },
+    }),
     AuthModule,
     UsersModule,
     PatientModule,
