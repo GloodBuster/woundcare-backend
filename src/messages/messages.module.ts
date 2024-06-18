@@ -2,9 +2,12 @@ import { Module } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { MessagesController } from './messages.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, MulterModule.register({
+    dest: "./photos"
+  })],
   controllers: [MessagesController],
   providers: [MessagesService],
   exports: [MessagesService],
