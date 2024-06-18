@@ -108,19 +108,39 @@ export class MessagesService {
     }
   }
 
-  async create(createMessageDto: CreateMessageDto) {
+  async createImageMessage(createMessageDto: CreateMessageDto, userId: string) {
     try {
-      return this.prismaService.message.create({
+      return await this.prismaService.message.create({
         data: {
           conversationId: Number(createMessageDto.conversationId),
-          userId: createMessageDto.userId,
+          userId,
           image: createMessageDto.image
         }
       })
     } catch (error) {
       if(error instanceof PrismaClientKnownRequestError){
         if(error.code === "P2025"){
-          throw new NotFoundError(error.message)
+          throw new NotFoundError("The user doesn't belong to that conversation")
+        }
+      }
+      throw new UnexpectedError('An unexpected situation ocurred', {
+        cause: error,
+      })
+    }
+  }
+  async createTextMessage(createMessageDto: CreateMessageDto, userId: string) {
+    try {
+      return await this.prismaService.message.create({
+        data: {
+          conversationId: Number(createMessageDto.conversationId),
+          userId,
+          text: createMessageDto.text
+        }
+      })
+    } catch (error) {
+      if(error instanceof PrismaClientKnownRequestError){
+        if(error.code === "P2025"){
+          throw new NotFoundError("The user doesn't belong to that conversation")
         }
       }
       throw new UnexpectedError('An unexpected situation ocurred', {
@@ -129,3 +149,4 @@ export class MessagesService {
     }
   }
 }
+

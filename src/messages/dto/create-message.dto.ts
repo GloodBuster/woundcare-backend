@@ -6,10 +6,6 @@ export class CreateMessageDto {
     conversationId: number
 
     @IsString()
-    @IsNotEmpty()
-    userId: string
-
-    @IsString()
     @IsOptional()
     text?: string
 
