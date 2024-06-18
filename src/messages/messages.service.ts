@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { PaginatedResponse } from 'src/common/responses/paginatedResponse';
 import { Message } from './entities/message.entity';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UnexpectedError } from 'src/common/errors/service.error';
+import { NotFoundError, UnexpectedError } from 'src/common/errors/service.error';
+import { CreateMessageDto } from './dto/create-message.dto';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class MessagesService {
@@ -103,6 +105,27 @@ export class MessagesService {
       throw new UnexpectedError('An unexpected situation ocurred', {
         cause: error,
       });
+    }
+  }
+
+  async create(createMessageDto: CreateMessageDto) {
+    try {
+      return this.prismaService.message.create({
+        data: {
+          conversationId: Number(createMessageDto.conversationId),
+          userId: createMessageDto.userId,
+          image: createMessageDto.image
+        }
+      })
+    } catch (error) {
+      if(error instanceof PrismaClientKnownRequestError){
+        if(error.code === "P2025"){
+          throw new NotFoundError(error.message)
+        }
+      }
+      throw new UnexpectedError('An unexpected situation ocurred', {
+        cause: error,
+      })
     }
   }
 }
