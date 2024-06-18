@@ -36,7 +36,6 @@ export class ChatGateway implements OnGatewayInit {
       this.server.on("connection", async (socket : Socket) => {
         try {
   
-          console.log(socket.handshake.auth.token, socket.handshake.headers.authorization)
           const token = socket?.handshake?.headers?.authorization || socket?.handshake?.auth?.token
           const user = await this.authService.verifyToken(token)
     //
@@ -52,10 +51,6 @@ export class ChatGateway implements OnGatewayInit {
           }
   
           room?.forEach(room => socket.join(`room-${room}`))
-    
-          console.log(`user connected: ${user.fullname}`)
-
-          console.log(socket.rooms)
     
           socket.on("disconnect", () => {
             console.log("cliente desconectado")
@@ -86,12 +81,8 @@ export class ChatGateway implements OnGatewayInit {
         return
       }
 
-      console.log(message)
-  
       const payload = await this.chatService.sendMessage(client, user.nationalId, message)
 
-      console.log(payload)
-  
       this.server.to(`room-${payload.message.conversationId}`).emit("on-message", payload )
 
 
