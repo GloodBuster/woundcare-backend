@@ -1,8 +1,8 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsInt, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateMessageDto {
-    @IsInt()
-    @IsOptional()
+    @IsString()
+    @IsNotEmpty()
     conversationId: number
 
     @IsString()
@@ -11,9 +11,10 @@ export class CreateMessageDto {
 
     @IsString()
     @IsOptional()
-    text: string
+    text?: string
 
     @IsString()
     @IsOptional()
-    image: string
+    image?: string
+
 }
