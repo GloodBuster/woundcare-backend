@@ -54,33 +54,6 @@ import { validate } from 'class-validator';
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
-  @Get(':name')
-  @Roles(Role.ADMIN, Role.PATIENT, Role.NURSE)
-  @ApiResponse({ type: Buffer })
-  async serveImage(@Param('name') name: string, @Res() response: Response) {
-    const stat = await new Promise<fs.Stats>((resolve, reject) => {
-      fs.stat(name, (err, stat) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(stat);
-        }
-      });
-    });
-
-    console.log(process.cwd());
-
-    response.set({
-      'Content-Disposition': `attachment; filename="${name}"`,
-      'Content-Type': 'application/octet-stream',
-      'Content-Length': stat.size,
-    });
-
-    const readStream = fs.createReadStream(join(process.cwd(), name));
-
-    return readStream.pipe(response);
-  }
-
   @Post('text')
   @Roles(Role.PATIENT, Role.DOCTOR, Role.NURSE)
   @HttpCode(HttpStatus.OK)
@@ -280,5 +253,31 @@ export class MessagesController {
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
+  }
+  @Get(':name')
+  @Roles(Role.ADMIN, Role.PATIENT, Role.NURSE)
+  @ApiResponse({ type: Buffer })
+  async serveImage(@Param('name') name: string, @Res() response: Response) {
+    const stat = await new Promise<fs.Stats>((resolve, reject) => {
+      fs.stat(name, (err, stat) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(stat);
+        }
+      });
+    });
+
+    console.log(process.cwd());
+
+    response.set({
+      'Content-Disposition': `attachment; filename="${name}"`,
+      'Content-Type': 'application/octet-stream',
+      'Content-Length': stat.size,
+    });
+
+    const readStream = fs.createReadStream(join(process.cwd(), name));
+
+    return readStream.pipe(response);
   }
 }
