@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreatePrescriptionDto {
   @IsNumber()
@@ -20,4 +20,8 @@ export class CreatePrescriptionDto {
   @IsNumber()
   @IsNotEmpty()
   lapse: number;
+
+  @IsDateString()
+  @IsOptional()
+  nextMedicine: string
 }

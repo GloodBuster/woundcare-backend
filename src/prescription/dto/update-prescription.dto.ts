@@ -1,19 +1,23 @@
-import { IsNumber, IsOptional, IsString } from "class-validator";
+import { IsDateString, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class UpdatePrescriptionDto {
     @IsString()
     @IsOptional()
-    medicineName: string
+    medicineName?: string
 
     @IsString()
     @IsOptional()
-    medicineDescription: string
+    medicineDescription?: string
 
     @IsNumber()
     @IsOptional()
-    lapse: number
+    lapse?: number
 
     @IsNumber()
     @IsOptional()
-    dose: number
+    dose?: number
+
+    @IsDateString()
+    @IsOptional()
+    nextMedicine?: string
 }

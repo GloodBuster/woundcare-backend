@@ -8,12 +8,126 @@ import {
   NotFoundError,
   UnexpectedError,
 } from 'src/common/errors/service.error';
-import { Prisma } from '@prisma/client';
+import { NotificationType, Prisma } from '@prisma/client';
 import { UpdateReadNotificationDto } from './dto/update-read-notification.dto';
+import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
+import { addHour } from '@formkit/tempo';
+import { PrescriptionService } from 'src/prescription/prescription.service';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly prescriptionService: PrescriptionService,
+  ) {}
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {name: 'dailyNotifications'})
+  async sendDailyCareNotifications() {
+    const users = await this.prismaService.patient.findMany({
+      select: {
+        nationalId: true,
+      },
+      where: {
+        MedicalFile: {
+          some: {
+            dischargeDate: null
+          }
+        }
+      }
+    })
+
+    users.forEach( user => {
+
+      const notification: CreateNotificationDto = {
+        message: "Hola, este es un recoradtorio para el formulario de cuidados diarios",
+        type: NotificationType.MONITORING_SIGNS_AND_SYMPTOMS,
+        userId: user.nationalId
+      }
+
+      this.create( notification )
+
+    })
+
+    console.log('notificaciones enviadas')
+
+    return;
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async sendBandageChangeNotifications() {
+    const date = new Date()
+    const patients = await this.prismaService.bandageChange.findMany({
+      where: {
+        //!ojaldre aca
+        date: date,
+      },
+      select: {
+        patientId: true,
+      }
+    })
+
+    patients.forEach(async (patient) => {
+      const notification: CreateNotificationDto = {
+        message: "Hola, es hora de cambiar el vendaje, recuerda que es hoy!",
+        type: NotificationType.BANDAGE_CHANGE,
+        userId: patient.patientId
+      }
+
+      await this.create(notification)
+
+      console.log("notification sent to patient "+ patient.patientId)
+
+    })
+
+    console.log("se enviaron los recordatorios de cambio de vendaje")
+
+    return;
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async sendMedicationReminder() {
+    const date = new Date()
+
+    const prescriptions = await this.prismaService.prescription.findMany({
+      where: {
+        MedicalFile: {
+          dischargeDate: null
+        }
+      },
+      select: {
+        id: true,
+        nextMedicine: true,
+        medicineName: true,
+        lapse: true,
+        MedicalFile: {
+          select: {
+            patientId: true
+          }
+        }
+      }
+    })
+
+    const prescriptionsForNow = prescriptions.filter(prescription => {
+      return date.getHours() === prescription.nextMedicine.getHours()
+    })
+
+    prescriptionsForNow.forEach( async (prescription) => {
+      const medicineNotification: CreateNotificationDto = {
+        message: `Recuerda que es hora de tomar ${prescription.medicineName}`,
+        type: NotificationType.MEDICATION_TIME,
+        userId: prescription.MedicalFile.patientId,
+      }
+
+      await this.create(medicineNotification)
+
+      const updatedPrescription = await this.prescriptionService.update(prescription.id, {nextMedicine: addHour(prescription.nextMedicine, prescription.lapse).toISOString()})
+
+      console.log(`prescription number ${updatedPrescription} was updated`)
+    })
+
+    console.log("notifications were sent")
+
+  }
 
   async create(
     createNotificationDto: CreateNotificationDto,

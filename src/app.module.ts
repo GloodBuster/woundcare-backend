@@ -18,13 +18,19 @@ import { ConversationsModule } from './conversations/conversations.module';
 import { MessagesModule } from './messages/messages.module';
 import { BandageChangeModule } from './bandage-change/bandage-change.module';
 import { ConfigModule as CustomConfigModule } from './common/config/config.module';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigService } from './common/config/config.service';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot(),
     CustomConfigModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '/public/'),
+      serveStaticOptions: { index: false },
+    }),
     AuthModule,
     UsersModule,
     PatientModule,
