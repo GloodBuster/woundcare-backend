@@ -106,7 +106,7 @@ export class MessagesController {
 
   @Post('upload')
   @ApiConsumes('multipart/form-data')
-  @Roles(Role.PATIENT, Role.DOCTOR, Role.NURSE)
+  @Roles(Role.PATIENT, Role.DOCTOR, Role.NURSE, Role.ADMIN)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -145,10 +145,10 @@ export class MessagesController {
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addMaxSizeValidator({
-          maxSize: 1024 * 1024 + 10,
+          maxSize: 1024 * 1024 * 10,
         })
         .addFileTypeValidator({
-          fileType: 'image/png',
+          fileType: 'image',
         })
         .build({
           errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,

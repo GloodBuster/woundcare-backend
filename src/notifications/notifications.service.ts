@@ -11,7 +11,7 @@ import {
 import { NotificationType, Prisma } from '@prisma/client';
 import { UpdateReadNotificationDto } from './dto/update-read-notification.dto';
 import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
-import { addHour } from '@formkit/tempo';
+import { addDay, addHour } from '@formkit/tempo';
 import { PrescriptionService } from 'src/prescription/prescription.service';
 
 @Injectable()
@@ -59,7 +59,7 @@ export class NotificationsService {
     const patients = await this.prismaService.bandageChange.findMany({
       where: {
         //!ojaldre aca
-        date: date,
+        date: addDay(date, -1),
       },
       select: {
         patientId: true,
