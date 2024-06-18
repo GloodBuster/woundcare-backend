@@ -374,7 +374,6 @@ export class ConversationsService {
         },
       };
     } catch (error) {
-      console.log(error);
       throw new UnexpectedError('An unexpeted situation ocurred', {
         cause: error,
       });

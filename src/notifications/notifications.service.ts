@@ -48,8 +48,6 @@ export class NotificationsService {
 
     })
 
-    console.log('notificaciones enviadas')
-
     return;
   }
 
@@ -75,11 +73,7 @@ export class NotificationsService {
 
       await this.create(notification)
 
-      console.log("notification sent to patient "+ patient.patientId)
-
     })
-
-    console.log("se enviaron los recordatorios de cambio de vendaje")
 
     return;
   }
@@ -121,12 +115,7 @@ export class NotificationsService {
       await this.create(medicineNotification)
 
       const updatedPrescription = await this.prescriptionService.update(prescription.id, {nextMedicine: addHour(prescription.nextMedicine, prescription.lapse).toISOString()})
-
-      console.log(`prescription number ${updatedPrescription} was updated`)
     })
-
-    console.log("notifications were sent")
-
   }
 
   async create(

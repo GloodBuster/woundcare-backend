@@ -46,7 +46,6 @@ export class AuthService {
       
       return result
     } catch (error) {
-      console.log("aaaa")
     }
   }
 }

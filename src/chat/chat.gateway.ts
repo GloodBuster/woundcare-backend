@@ -53,7 +53,6 @@ export class ChatGateway implements OnGatewayInit {
           room?.forEach(room => socket.join(`room-${room}`))
     
           socket.on("disconnect", () => {
-            console.log("cliente desconectado")
           })
         } catch (error) {
           this.disconnect(socket, error.message)

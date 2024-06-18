@@ -268,8 +268,6 @@ export class MessagesController {
       });
     });
 
-    console.log(process.cwd());
-
     response.set({
       'Content-Disposition': `attachment; filename="${name}"`,
       'Content-Type': 'application/octet-stream',
