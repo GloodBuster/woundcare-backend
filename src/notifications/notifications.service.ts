@@ -11,15 +11,18 @@ import {
 import { NotificationType, Prisma } from '@prisma/client';
 import { UpdateReadNotificationDto } from './dto/update-read-notification.dto';
 import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
+import { addHour } from '@formkit/tempo';
+import { PrescriptionService } from 'src/prescription/prescription.service';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly prescriptionService: PrescriptionService,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {name: 'dailyNotifications'})
-  async sendDailyNotifications() {
+  async sendDailyCareNotifications() {
     const users = await this.prismaService.patient.findMany({
       select: {
         nationalId: true,
@@ -33,11 +36,10 @@ export class NotificationsService {
       }
     })
 
-
     users.forEach( user => {
 
       const notification: CreateNotificationDto = {
-        message: "Hola, este es un recoradtorio para el vendaje de hoy",
+        message: "Hola, este es un recoradtorio para el formulario de cuidados diarios",
         type: NotificationType.MONITORING_SIGNS_AND_SYMPTOMS,
         userId: user.nationalId
       }
