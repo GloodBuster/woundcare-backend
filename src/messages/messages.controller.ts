@@ -145,7 +145,7 @@ export class MessagesController {
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addMaxSizeValidator({
-          maxSize: 500000,
+          maxSize: 1024 * 1024 + 10,
         })
         .addFileTypeValidator({
           fileType: 'image/png',
