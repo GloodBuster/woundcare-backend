@@ -57,7 +57,7 @@ export class NotificationsService {
     const patients = await this.prismaService.bandageChange.findMany({
       where: {
         //!ojaldre aca
-        date: addDay(date, -1),
+        date: addDay(date, 1),
       },
       select: {
         patientId: true,
