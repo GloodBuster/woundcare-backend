@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateMedicalFileDto } from './dto/create-medical-file.dto';
 import { UpdateMedicalFileDto } from './dto/update-medical-file.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { PatientStatus } from '@prisma/client';
+import { NotificationType, PatientStatus } from '@prisma/client';
 import { UnexpectedError } from 'src/common/errors/service.error';
 
 @Injectable()
@@ -139,6 +139,14 @@ export class MedicalFileService {
           },
           data: {
             status: PatientStatus.INACTIVE,
+          },
+        }),
+        this.prismaService.notifications.create({
+          data: {
+            type: NotificationType.DISCHARGE,
+            userId: patientId,
+            message:
+              'Estimado/a paciente, responda a las siguientes preguntas para conocer su experiencia usando la plataforma y mejorar nuestro servicio.',
           },
         }),
       ]);
