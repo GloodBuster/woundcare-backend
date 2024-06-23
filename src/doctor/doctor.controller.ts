@@ -88,8 +88,16 @@ export class DoctorController {
   @Get(':id')
   @Roles(Role.ADMIN, Role.NURSE)
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string) {
-    return this.doctorService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    try {
+      const doctor = await this.doctorService.findOne(id);
+      if (!doctor) throw new NotFoundException('Doctor not found');
+      return doctor;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
   @Patch(':id')

@@ -129,7 +129,19 @@ export class PatientController {
   @Roles(Role.ADMIN, Role.NURSE, Role.DOCTOR)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
-    return await this.patientService.findOne(id);
+    try {
+      const patient = await this.patientService.findOne(id);
+
+      if (!patient) {
+        throw new NotFoundException('Patient not found');
+      }
+
+      return patient;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+
+      throw new InternalServerErrorException(error.message, { cause: error });
+    }
   }
 
   @Patch('me')
