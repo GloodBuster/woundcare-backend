@@ -66,14 +66,12 @@ export class PatientController {
   @Roles(Role.NURSE)
   @HttpCode(HttpStatus.OK)
   async findNurseActivePatients(
-    @Request() req: RequestWithUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
     itemsPerPage: number,
   ): Promise<PaginatedResponse<PatientDto>> {
     try {
       return await this.patientService.findActivePatientsPage(
-        req.user.nationalId,
         page,
         itemsPerPage,
       );
@@ -86,14 +84,12 @@ export class PatientController {
   @Roles(Role.NURSE)
   @HttpCode(HttpStatus.OK)
   async findNurseInactivePatients(
-    @Request() req: RequestWithUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('per-page', new DefaultValuePipe(10), ParseIntPipe)
     itemsPerPage: number,
   ): Promise<PaginatedResponse<PatientDto>> {
     try {
       return await this.patientService.findInactivePatientsPage(
-        req.user.nationalId,
         page,
         itemsPerPage,
       );

@@ -121,7 +121,6 @@ export class PatientService {
   }
 
   async findActivePatientsPage(
-    nurseId: string,
     page: number,
     itemsPerPage: number,
   ): Promise<PaginatedResponse<PatientDto>> {
@@ -130,21 +129,11 @@ export class PatientService {
         this.prismaService.patient.count({
           where: {
             status: PatientStatus.ACTIVE,
-            MedicalFile: {
-              some: {
-                nurseId,
-              },
-            },
           },
         }),
         this.prismaService.patient.findMany({
           where: {
             status: PatientStatus.ACTIVE,
-            MedicalFile: {
-              some: {
-                nurseId,
-              },
-            },
           },
           take: itemsPerPage,
           skip: (page - 1) * itemsPerPage,
@@ -174,7 +163,6 @@ export class PatientService {
   }
 
   async findInactivePatientsPage(
-    nurseId: string,
     page: number,
     itemsPerPage: number,
   ): Promise<PaginatedResponse<PatientDto>> {
@@ -183,21 +171,11 @@ export class PatientService {
         this.prismaService.patient.count({
           where: {
             status: PatientStatus.INACTIVE,
-            MedicalFile: {
-              some: {
-                nurseId,
-              },
-            },
           },
         }),
         this.prismaService.patient.findMany({
           where: {
             status: PatientStatus.INACTIVE,
-            MedicalFile: {
-              some: {
-                nurseId,
-              },
-            },
           },
           take: itemsPerPage,
           skip: (page - 1) * itemsPerPage,
